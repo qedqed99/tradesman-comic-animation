@@ -27,9 +27,15 @@ node tools/build.mjs                           # single-file player -> dist/trad
 ```
 Open `index.html` in a browser for the live player (scrub bar, scene buttons, space = play, arrow keys = step a frame).
 
-## Scenes so far (comic panels 1-5)
-1. `checklist` Noah ticks his work order, hears something: "Done.. Check..", "Huh?"
-2. `hey-noah` Lu walks across the lot, waves: "Hey Noah!"
-3. `run` Noah screams and bolts, clipboard goes PLINK PLINK, Lu jogs after him.
-
-Still to build: phone call to the Boss, Boss in the hot tub, the chase ("I Just... Wanna... Help!!!!"), the SCREEECH car arrival, "Hey Guys! Jump In!", "LUNCHTIME!" / "CHIPOTLE!" / "No!", and the Korean BBQ ending.
+## Scenes (all 15 comic panels, about 45 s)
+1. `checklist` Noah ticks his work order: "Done.. Check..", "Huh?"
+2. `hey-noah` Lu walks across the lot and waves: "Hey Noah!"
+3. `run` Noah screams and bolts, clipboard goes PLINK PLINK
+4. `phone` Noah calls the Boss mid-run: "Boss! Boss! Lu is Being Helpful Again!"
+5. `hot-tub` The Boss in his hot tub: "I'll Take Care of It!!"
+6. `chase` Lu reaches for Noah: "I Just... Wanna.... Help!!!!"
+7. `screech` The brown sedan skids in
+8. `jump-in` The Boss leans out: "Hey Guys! Jump In!"
+9. `lunchtime` "LUNCHTIME!" / "CHIPOTLE!"
+10. `no` Lu: "No!"
+11. `bbq` Korean BBQ, THE END

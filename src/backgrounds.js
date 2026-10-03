@@ -102,6 +102,61 @@
     }
     el('path', { d, stroke: '#e9e5d8', 'stroke-width': 5, opacity: 0.75, fill: 'none', 'stroke-linecap': 'round' }, g);
   }
+  // parking-lot stripes that stream toward the camera (tracking shots while running)
+  function lotScroll(g, horizon, vx = W / 2) {
+    el('rect', { x: -3000, y: horizon, width: W + 6000, height: 3000, fill: 'url(#asphalt)' }, g);
+    const r = rng(8);
+    for (let i = 0; i < 30; i++) el('ellipse', { cx: r() * W * 1.6 - W * 0.3, cy: horizon + 20 + r() * 900, rx: 30 + r() * 120, ry: 4 + r() * 10, fill: '#000', opacity: 0.05 }, g);
+    const p = el('path', { stroke: '#e9e5d8', 'stroke-width': 5, opacity: 0.75, fill: 'none', 'stroke-linecap': 'round' }, g);
+    return {
+      update(offset) {
+        const ph = offset - Math.floor(offset);
+        let d = '';
+        for (let k = 0; k < 9; k++) {
+          const z = 0.5 * Math.pow(1.8, k - ph);
+          const y0 = horizon + 620 / z, y1 = horizon + 620 / (z * 1.4);
+          if (y1 > H + 400) continue;
+          const k0 = (y0 - horizon) / 620, k1 = (y1 - horizon) / 620;
+          d += `M${vx - 4000 * k0},${y0.toFixed(1)}L${vx + 4000 * k0},${y0.toFixed(1)}`;
+          for (let s = -14; s <= 14; s++) d += `M${(vx + s * 330 * k0).toFixed(1)},${y0.toFixed(1)}L${(vx + s * 330 * k1).toFixed(1)},${y1.toFixed(1)}`;
+        }
+        p.setAttribute('d', d);
+      },
+    };
+  }
+  // a country road seen from the hood of a car; update(offset) moves the centre dashes
+  function road(g, horizon, vx = W / 2) {
+    el('rect', { x: -3000, y: horizon, width: W + 6000, height: 3000, fill: '#8fa66b' }, g);
+    el('path', { d: `M${vx - 30},${horizon} L${vx + 30},${horizon} L${vx + 1600},${H + 600} L${vx - 1600},${H + 600}Z`, fill: '#5c6062' }, g);
+    el('path', { d: `M${vx - 26},${horizon} L${vx - 1380},${H + 600} M${vx + 26},${horizon} L${vx + 1380},${H + 600}`, stroke: '#e9e5d8', 'stroke-width': 6, fill: 'none' }, g);
+    const dash = el('path', { fill: '#f2c94c' }, g);
+    return {
+      update(offset) {
+        let d = '';
+        for (let k = 0; k < 10; k++) {
+          const ph = offset - Math.floor(offset);
+          const z0 = 0.35 * Math.pow(1.6, k - ph), z1 = z0 * 1.25;
+          const y0 = horizon + 300 / z0, y1 = horizon + 300 / z1;
+          const w0 = 3 + 14 / z0, w1 = 3 + 14 / z1;
+          d += `M${vx - w0},${y0.toFixed(1)}L${vx + w0},${y0.toFixed(1)}L${vx + w1},${y1.toFixed(1)}L${vx - w1},${y1.toFixed(1)}Z`;
+        }
+        dash.setAttribute('d', d);
+      },
+    };
+  }
+  // drifting puffs of smoke / steam; returns update(t)
+  function puffs(g, { n = 8, seed = 1, color = '#e9e6df', x = 0, y = 0, spreadX = 200, rise = 260, size = 40, period = 1.6 } = {}) {
+    const r = rng(seed);
+    const list = Array.from({ length: n }, () => ({ c: el('circle', { fill: color }, g), dx: (r() - 0.5) * spreadX, o: r(), s: 0.6 + r() * 0.8, sway: r() * 6 }));
+    return {
+      update(t, strength = 1, ox = x, oy = y) {
+        list.forEach(P => {
+          const k = ((t / period) + P.o) % 1;
+          set(P.c, { cx: (ox + P.dx * (0.5 + k) + Math.sin(t * 2 + P.sway) * 12).toFixed(1), cy: (oy - k * rise).toFixed(1), r: (size * P.s * (0.4 + k)).toFixed(1), opacity: (Math.sin(k * Math.PI) * 0.75 * strength).toFixed(3) });
+        });
+      },
+    };
+  }
   // feet on the ground at screen y -> puppet scale (1.0 at y = horizon + k)
   const depthScale = (y, horizon, k = 440) => Math.max(0.02, (y - horizon) / k);
 
@@ -122,5 +177,5 @@
 
   function vignette(g) { defs(g.ownerSVGElement); return el('rect', { width: W, height: H, fill: 'url(#vignette)', 'pointer-events': 'none' }, g); }
 
-  TS.bg = { defs, camera, sky, hills, warehouse, lot, depthScale, speedLines, vignette, shade, W, H };
+  TS.bg = { defs, camera, sky, hills, warehouse, lot, lotScroll, road, puffs, depthScale, speedLines, vignette, shade, W, H };
 })(window.TS);

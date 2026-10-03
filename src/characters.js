@@ -16,6 +16,8 @@
     lu:   { body: 'adult', skin: '#efbf8b', hair: 'spiky', hairColor: '#221c19', iris: '#3b2a1e', shirt: '#f5f1e6', logo: 'olympic', bottom: 'pants', bottomColor: '#212125', shoes: '#c4c7cb', glasses: '#5e4935', stubble: true },
     boss: { body: 'adult', skin: '#e4a974', hair: 'beanie', hairColor: '#2b2a29', iris: '#3b2a1e', shirt: '#4e7a45', bottom: 'pants', bottomColor: '#3b3a37', shoes: '#4a3a2c', sunglasses: true, beard: '#a39687' },
   };
+  // the Boss off duty, in the hot tub
+  TS.CAST.bossTub = { ...TS.CAST.boss, shirt: TS.CAST.boss.skin, shirtless: true, bottomColor: '#2f3a44' };
 
   // ---- shape helpers -----------------------------------------------------
   function limb(parent, color, w) {
@@ -104,7 +106,13 @@
     const sw = B.shX + B.limb * 0.45;
     el('path', { fill: c.shirt, stroke: INK, 'stroke-width': 5, 'stroke-linejoin': 'round',
       d: `M${-sw},${B.shY + 22} Q${-sw},${B.shY - 6} ${-sw + 26},${B.shY - 8} L${sw - 26},${B.shY - 8} Q${sw},${B.shY - 6} ${sw},${B.shY + 22} L${B.waist + 4},${B.hipY - 4} L${-B.waist - 4},${B.hipY - 4}Z` }, torsoG);
-    el('path', { fill: 'none', stroke: INK, 'stroke-width': 3.5, 'stroke-linecap': 'round', d: `M${-B.limb * 0.75},${B.shY - 7} Q0,${B.shY + 12} ${B.limb * 0.75},${B.shY - 7}` }, torsoG);
+    if (c.shirtless) {
+      const pec = (s) => `M${s * 4},${B.shY + 38} Q${s * 26},${B.shY + 52} ${s * 46},${B.shY + 30}`;
+      [-1, 1].forEach(s => el('path', { d: pec(s), fill: 'none', stroke: INK, 'stroke-width': 3, 'stroke-linecap': 'round', opacity: 0.6 }, torsoG));
+      [-1, 1].forEach(s => el('circle', { cx: s * 28, cy: B.shY + 44, r: 3.5, fill: '#b9714b' }, torsoG));
+      el('path', { d: `M-30,${B.shY + 105} Q0,${B.shY + 118} 30,${B.shY + 105}`, fill: 'none', stroke: INK, 'stroke-width': 3, opacity: 0.45 }, torsoG);
+    } else
+      el('path', { fill: 'none', stroke: INK, 'stroke-width': 3.5, 'stroke-linecap': 'round', d: `M${-B.limb * 0.75},${B.shY - 7} Q0,${B.shY + 12} ${B.limb * 0.75},${B.shY - 7}` }, torsoG);
     if (c.logo === 'olympic') {
       const cols = ['#2e6fbf', '#f2b632', '#1d1a17', '#2f9a4c', '#d8392f'];
       const r = 10.5, cy = B.shY + 52;
@@ -208,6 +216,9 @@
         cape: { ...DEF.cape, ...(p.cape || {}) },
       };
       state = st;
+      // hands-up gestures (phone to the ear) need the arms drawn over the head
+      if (!!st.armsFront !== (armsG.nextSibling === null)) upper.appendChild(st.armsFront ? armsG : headG);
+      shadow.setAttribute('display', st.shadow === false ? 'none' : 'inline');
       set(root, { transform: `translate(${st.x.toFixed(1)} ${st.y.toFixed(1)}) scale(${(st.s * st.flip).toFixed(4)} ${st.s.toFixed(4)})` });
       set(body, { transform: `translate(0 ${(-st.bob).toFixed(1)})` });
       set(shadow, { transform: `scale(${(1 - st.bob / 300).toFixed(3)} 1)` });

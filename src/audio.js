@@ -61,6 +61,33 @@
       [2350, 3530, 5100].forEach((f, i) => osc(ctx, 'sine', f, f * 0.995, t, 0.35, env(ctx, out, t, 0.14 / (i + 1), 0.002, 0.35 - i * 0.08)));
       noiseHit(ctx, env(ctx, out, t, 0.25, 0.001, 0.03), t, 0.03, 'highpass', 4000, 6000);
     },
+    // phone dialing: two quick beeps
+    ring(ctx, out, t) { for (const k of [0, 0.16]) osc(ctx, 'sine', 1320, 1320, t + k, 0.1, env(ctx, out, t + k, 0.18, 0.005, 0.1)); },
+    // hot tub: a burst of bubbly blips over low rumble
+    bubbles(ctx, out, t) {
+      noiseHit(ctx, env(ctx, out, t, 0.25, 0.2, 1.4), t, 1.6, 'lowpass', 300, 200);
+      const r = TS.rng(Math.floor(t * 100));
+      for (let i = 0; i < 14; i++) { const k = t + r() * 1.5, f = 300 + r() * 500; osc(ctx, 'sine', f, f * 2.2, k, 0.06, env(ctx, out, k, 0.12, 0.004, 0.06)); }
+    },
+    // quick running footsteps for about a second
+    run(ctx, out, t) { for (let k = 0; k < 7; k++) osc(ctx, 'sine', 140, 60, t + k * 0.15, 0.07, env(ctx, out, t + k * 0.15, 0.35, 0.003, 0.08)); },
+    // tyre screech: squealing band of noise plus a wobbling whine
+    screech(ctx, out, t) {
+      noiseHit(ctx, env(ctx, out, t, 0.35, 0.05, 1.3), t, 1.35, 'bandpass', 2600, 1900, 9);
+      const g = env(ctx, out, t, 0.08, 0.05, 1.3);
+      const o = osc(ctx, 'sawtooth', 1900, 1500, t, 1.35, null);
+      const lfo = ctx.createOscillator(); lfo.frequency.value = 23; const lg = ctx.createGain(); lg.gain.value = 60;
+      lfo.connect(lg); lg.connect(o.frequency); lfo.start(t); lfo.stop(t + 1.4);
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1800; bp.Q.value = 3; o.connect(bp); bp.connect(g);
+    },
+    honk(ctx, out, t) { for (const f of [392, 494]) osc(ctx, 'square', f, f, t, 0.35, env(ctx, out, t, 0.07, 0.01, 0.33)); },
+    // record scratch for the "No!"
+    scratch(ctx, out, t) {
+      noiseHit(ctx, env(ctx, out, t, 0.45, 0.01, 0.12), t, 0.14, 'bandpass', 900, 2600, 4);
+      noiseHit(ctx, env(ctx, out, t + 0.13, 0.35, 0.01, 0.16), t + 0.13, 0.18, 'bandpass', 2400, 700, 4);
+    },
+    sizzle(ctx, out, t) { noiseHit(ctx, env(ctx, out, t, 0.18, 0.3, 2.5), t, 2.8, 'highpass', 5000, 6500, 0.7); },
+    tada(ctx, out, t) { [523, 659, 784, 1047].forEach((f, i) => osc(ctx, 'triangle', f, f, t + i * 0.09, 0.6, env(ctx, out, t + i * 0.09, 0.16, 0.01, 0.7))); },
   };
 
   // ---- background music: a bouncy procedural loop -------------------------------

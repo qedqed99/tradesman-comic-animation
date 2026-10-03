@@ -29,7 +29,8 @@
     const lh = 74;
     const tw = Math.max(...lines.map(s => textWidth(s, SPEECH_FONT)));
     const rx = tw / 2 * 1.2 + 44, ry = lines.length * lh / 2 * 1.25 + 34;
-    const tail = el('path', { fill: '#fff', stroke: INK, 'stroke-width': 5, 'stroke-linejoin': 'round' }, g);
+    const speakers = [].concat(line.who);
+    const tails = speakers.map(() => el('path', { fill: '#fff', stroke: INK, 'stroke-width': 5, 'stroke-linejoin': 'round' }, g));
     const body = line.style === 'shout'
       ? el('path', { d: burstPath(rx * 1.08, ry * 1.15, 14, idx * 7 + 3), fill: '#fff', stroke: INK, 'stroke-width': 5, 'stroke-linejoin': 'round' }, g)
       : el('ellipse', { rx, ry, fill: '#fff', stroke: INK, 'stroke-width': 5 }, g);
@@ -42,7 +43,7 @@
       sp.textContent = s;
       return sp;
     });
-    return { g, tail, body, rx, ry, spans, lines };
+    return { g, tails, speakers, body, rx, ry, spans, lines };
   }
 
   function makeSfx(layer, s) {
@@ -83,7 +84,8 @@
         const jig = d.style === 'shout' ? Math.sin(t * 60) * 4 : 0;
         set(b.g, { transform: tf(x + jig, y + Math.cos(t * 53) * jig, s) });
         // tail points at the speaker, using the scene's anchor function when it has one
-        const anchorFn = item.anchors && item.anchors[d.who];
+        b.speakers.forEach((who, ti) => {
+        const anchorFn = item.anchors && item.anchors[who];
         const a = anchorFn ? anchorFn() : { x: d.tail[0], y: d.tail[1] };
         const dx = (a.x - x) / s, dy = (a.y - y) / s;
         const ang = Math.atan2(dy / b.ry, dx / b.rx);
@@ -94,7 +96,8 @@
         const edge = Math.hypot(Math.cos(ang) * b.rx, Math.sin(ang) * b.ry);
         const reach = Math.min(dist - 50, edge + 140);
         const tip = [dx / dist * reach, dy / dist * reach];
-        set(b.tail, { d: `M${p1}L${tip}L${p2}Z` });
+        set(b.tails[ti], { d: `M${p1}L${tip}L${p2}Z` });
+        });
         // typewriter reveal
         const total = d.text.replace(/\n/g, '').length;
         let shownChars = Math.floor(clamp((t - d.at - 0.08) / Math.max(0.25, total * 0.035)) * total);
