@@ -1,0 +1,4 @@
+renders/
+dist/
+node_modules/
+*.log

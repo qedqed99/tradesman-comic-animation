@@ -1,0 +1,127 @@
+// All sound is synthesized with the Web Audio API: no audio files, no samples.
+// The same code drives live playback and the offline render that goes into the MP4.
+(function (TS) {
+  let noiseBuf = null;
+  function noise(ctx) {
+    if (noiseBuf && noiseBuf.sampleRate === ctx.sampleRate && noiseBuf._ctx === ctx) return noiseBuf;
+    const r = TS.rng(99), len = ctx.sampleRate * 2;
+    noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = r() * 2 - 1;
+    noiseBuf._ctx = ctx;
+    return noiseBuf;
+  }
+  function env(ctx, dest, t, peak, a, d) {
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(peak, t + a);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + a + d);
+    g.connect(dest);
+    return g;
+  }
+  function osc(ctx, type, f0, f1, t, dur, out) {
+    const o = ctx.createOscillator();
+    o.type = type; o.frequency.setValueAtTime(f0, t);
+    if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    if (out) o.connect(out); o.start(t); o.stop(t + dur + 0.05);
+    return o;
+  }
+  function noiseHit(ctx, out, t, dur, type, f0, f1, q = 1) {
+    const s = ctx.createBufferSource(); s.buffer = noise(ctx);
+    const f = ctx.createBiquadFilter(); f.type = type; f.Q.value = q;
+    f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    s.connect(f); f.connect(out); s.start(t, (t * 7.31) % 1.5); s.stop(t + dur + 0.05);
+  }
+
+  // ---- sound library: name -> (ctx, out, time) ----------------------------------
+  const SFX = {
+    pop(ctx, out, t) { osc(ctx, 'sine', 700, 260, t, 0.09, env(ctx, out, t, 0.35, 0.005, 0.1)); },
+    tick(ctx, out, t) {
+      noiseHit(ctx, env(ctx, out, t, 0.5, 0.003, 0.06), t, 0.06, 'highpass', 3000, 5000);
+      noiseHit(ctx, env(ctx, out, t + 0.07, 0.4, 0.003, 0.08), t + 0.07, 0.08, 'highpass', 2500, 4000);
+    },
+    huh(ctx, out, t) { const g = env(ctx, out, t, 0.28, 0.02, 0.35); osc(ctx, 'triangle', 380, 900, t, 0.35, g); },
+    steps(ctx, out, t) { for (const k of [0, 0.27]) osc(ctx, 'sine', 120, 55, t + k, 0.09, env(ctx, out, t + k, 0.45, 0.004, 0.1)); },
+    whoosh(ctx, out, t) { noiseHit(ctx, env(ctx, out, t, 0.45, 0.12, 0.35), t, 0.45, 'bandpass', 400, 3200, 2); },
+    chime(ctx, out, t) { [784, 988, 1175].forEach((f, i) => osc(ctx, 'sine', f, f, t + i * 0.07, 0.5, env(ctx, out, t + i * 0.07, 0.16, 0.01, 0.5))); },
+    sting(ctx, out, t) {
+      [196, 233, 294, 392].forEach(f => osc(ctx, 'sawtooth', f, f * 0.98, t, 0.6, env(ctx, out, t, 0.09, 0.01, 0.6)));
+      noiseHit(ctx, env(ctx, out, t, 0.4, 0.002, 0.25), t, 0.25, 'lowpass', 900, 200);
+    },
+    scream(ctx, out, t) {
+      // cartoon slide-whistle panic with vibrato
+      const g = env(ctx, out, t, 0.2, 0.05, 1.6);
+      const o = osc(ctx, 'square', 520, 1300, t, 1.6, null);
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2200;
+      const lfo = ctx.createOscillator(); lfo.frequency.value = 9; const lg = ctx.createGain(); lg.gain.value = 40;
+      lfo.connect(lg); lg.connect(o.frequency); lfo.start(t); lfo.stop(t + 1.7);
+      o.connect(lp); lp.connect(g);
+    },
+    plink(ctx, out, t) {
+      [2350, 3530, 5100].forEach((f, i) => osc(ctx, 'sine', f, f * 0.995, t, 0.35, env(ctx, out, t, 0.14 / (i + 1), 0.002, 0.35 - i * 0.08)));
+      noiseHit(ctx, env(ctx, out, t, 0.25, 0.001, 0.03), t, 0.03, 'highpass', 4000, 6000);
+    },
+  };
+
+  // ---- background music: a bouncy procedural loop -------------------------------
+  const MUSIC = {
+    bouncy(ctx, out, from, to) {
+      const bpm = 132, beat = 60 / bpm;
+      const prog = [[48, 52, 55], [43, 47, 50], [45, 48, 52], [41, 45, 48]]; // C G Am F
+      const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+      const melody = [72, null, 76, 74, 72, null, 69, null, 71, null, 74, 72, 71, null, 67, null, 69, null, 72, 71, 69, null, 64, null, 65, 67, 69, 67, 65, null, 62, null];
+      const first = Math.floor(from / beat);
+      for (let b = first; b * beat < to; b++) {
+        const t = b * beat - from;
+        if (t < -0.01) continue;
+        const ch = prog[Math.floor(b / 4) % 4];
+        osc(ctx, 'triangle', mtof(ch[0] - 12), mtof(ch[0] - 12), t, beat * 0.8, env(ctx, out, t, 0.5, 0.01, beat * 0.7));
+        // off-beat chord stabs
+        ch.forEach(n => osc(ctx, 'square', mtof(n + 12), mtof(n + 12), t + beat / 2, 0.12, env(ctx, out, t + beat / 2, 0.035, 0.005, 0.12)));
+        // kick + hat
+        if (b % 2 === 0) osc(ctx, 'sine', 150, 45, t, 0.14, env(ctx, out, t, 0.6, 0.003, 0.15));
+        noiseHit(ctx, env(ctx, out, t + beat / 2, 0.08, 0.002, 0.04), t + beat / 2, 0.04, 'highpass', 7000, 8000);
+        // melody on eighths
+        for (const h of [0, 1]) {
+          const m = melody[(b * 2 + h) % melody.length];
+          if (m) osc(ctx, 'triangle', mtof(m), mtof(m), t + h * beat / 2, beat * 0.45, env(ctx, out, t + h * beat / 2, 0.11, 0.01, beat * 0.42));
+        }
+      }
+    },
+  };
+
+  // schedule every cue whose time is >= from, relative to ctx time `base`
+  function schedule(ctx, dest, cues, music, from, to) {
+    const sfxBus = ctx.createGain(); sfxBus.gain.value = 0.9; sfxBus.connect(dest);
+    const musicBus = ctx.createGain(); musicBus.gain.value = music ? music.volume : 0; musicBus.connect(dest);
+    if (music && MUSIC[music.track]) MUSIC[music.track](ctx, musicBus, from, to);
+    for (const c of cues) {
+      if (c.t < from - 0.02 || c.t > to) continue;
+      const fn = SFX[c.sound];
+      if (!fn) { console.warn('unknown sound', c.sound); continue; }
+      const g = ctx.createGain(); g.gain.value = c.gain == null ? 1 : c.gain; g.connect(sfxBus);
+      fn(ctx, g, Math.max(0, c.t - from));
+    }
+  }
+
+  // offline render -> base64 WAV (used by tools/render.mjs)
+  async function renderWav(cues, music, from, to, sampleRate = 48000) {
+    const ctx = new OfflineAudioContext(2, Math.ceil((to - from) * sampleRate), sampleRate);
+    const master = ctx.createDynamicsCompressor(); master.connect(ctx.destination);
+    schedule(ctx, master, cues, music, from, to);
+    const buf = await ctx.startRendering();
+    const n = buf.length, ch = [buf.getChannelData(0), buf.getChannelData(1)];
+    const out = new DataView(new ArrayBuffer(44 + n * 4));
+    const str = (o, s) => [...s].forEach((c, i) => out.setUint8(o + i, c.charCodeAt(0)));
+    str(0, 'RIFF'); out.setUint32(4, 36 + n * 4, true); str(8, 'WAVEfmt ');
+    out.setUint32(16, 16, true); out.setUint16(20, 1, true); out.setUint16(22, 2, true);
+    out.setUint32(24, sampleRate, true); out.setUint32(28, sampleRate * 4, true);
+    out.setUint16(32, 4, true); out.setUint16(34, 16, true); str(36, 'data'); out.setUint32(40, n * 4, true);
+    for (let i = 0, o = 44; i < n; i++) for (let c = 0; c < 2; c++, o += 2) out.setInt16(o, Math.max(-1, Math.min(1, ch[c][i])) * 32767, true);
+    let bin = ''; const bytes = new Uint8Array(out.buffer);
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return btoa(bin);
+  }
+
+  TS.audio = { SFX, MUSIC, schedule, renderWav };
+})(window.TS);
