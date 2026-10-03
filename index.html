@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Tradesman Short</title>
+<title>Life at Tradesman</title>
 <style>
 /* Layout: a dark screening room; the film frame on top, transport and scene strip under it. Single deliberate dark look. */
 @font-face { font-family: 'Bangers'; src: url('assets/fonts/bangers.woff2') format('woff2'); font-display: block; }
@@ -51,7 +51,7 @@ body.render .screen { border: 0; box-shadow: none; width: 1920px; height: 1080px
 <body>
 <div class="wrap">
   <header>
-    <h1>The <span>Tradesman</span></h1>
+    <h1>Life at <span>Tradesman</span></h1>
     <div class="meta">Animated in code from Rhett's comic</div>
   </header>
   <div class="screen">
@@ -123,8 +123,7 @@ body.render .screen { border: 0; box-shadow: none; width: 1920px; height: 1080px
       if (t >= player.duration - 0.05) t = 0;
       stopAudio();
       ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const master = ctx.createDynamicsCompressor(); master.connect(ctx.destination);
-      TS.audio.schedule(ctx, master, player.audioCues(), window.TIMELINE.music, t, player.duration);
+      TS.audio.schedule(ctx, TS.audio.master(ctx), player.audioCues(), window.TIMELINE.music, t, player.duration);
       base = ctx.currentTime; from = t; playing = true;
       playBtn.textContent = 'Pause'; big.hidden = true;
       cancelAnimationFrame(raf);

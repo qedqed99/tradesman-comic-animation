@@ -15,7 +15,7 @@
     render(t, cfg, item) {
       const { S, lu, noah, lines } = item.s;
       S.sky.update(t + 60);
-      S.scroller.update(t * 1.7);
+      S.scroller.update(-t * 1.7);
       TS.bg.camera(S.list, { x: 900 + Math.sin(t * 9) * 6, y: 500 + Math.abs(Math.sin(t * 10.7)) * 8, zoom: 1.25, rot: Math.sin(t * 7) * 0.5 });
       // Lu, small and far behind, still coming
       const ml = motion.stride(t, 3, 0.8);

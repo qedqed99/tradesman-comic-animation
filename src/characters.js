@@ -317,7 +317,9 @@
     },
     // mouth flaps while a dialogue line is being "spoken"
     talk(t, line, extra = 1) {
-      if (!line || t < line.at || t > line.at + Math.min(line.dur || 2, 0.25 + line.text.length * 0.06)) return null;
+      if (!line || t < line.at || t > line.at + (line.dur || 2)) return null;
+      const lt = t - line.at;
+      if (!TS.speech.parse(line).segs.some(([a, b]) => lt >= a - 0.05 && lt <= b + 0.2)) return null;
       return 0.25 + Math.abs(Math.sin((t - line.at) * 17)) * 0.75 * extra;
     },
     blink(t, seed = 0) {

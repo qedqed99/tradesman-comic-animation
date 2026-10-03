@@ -13,6 +13,26 @@
     return measureCtx.measureText(s).width;
   }
 
+  // Dialogue text may hold timed pauses: "Done..{1}\nCheck.." waits 1 s before "Check..".
+  // parse() returns the clean lines, the reveal time of every character, and the spoken segments.
+  const CHAR_T = 0.035, LEAD = 0.08;
+  function parse(line) {
+    if (line._p && line._p.src === line.text) return line._p;
+    const parts = line.text.split(/\{([\d.]+)\}/);
+    const visible = parts.filter((_, i) => i % 2 === 0).join('').replace(/\n/g, '').length;
+    const per = Math.max(CHAR_T, 0.25 / Math.max(1, visible));
+    let t = LEAD, clean = '';
+    const times = [], segs = [];
+    parts.forEach((p, i) => {
+      if (i % 2) { t += parseFloat(p); return; }
+      const start = t;
+      for (const ch of p) { clean += ch; if (ch !== '\n') { t += per; times.push(t); } }
+      if (p.replace(/\n/g, '').length) segs.push([start, t]);
+    });
+    return (line._p = { src: line.text, clean, lines: clean.split('\n'), times, segs, end: t });
+  }
+  TS.speech = { parse };
+
   function burstPath(rx, ry, spikes, seed) {
     const r = rng(seed); let d = '';
     for (let i = 0; i < spikes * 2; i++) {
@@ -25,7 +45,7 @@
 
   function makeBubble(layer, line, idx) {
     const g = el('g', { class: 'bubble' }, layer);
-    const lines = line.text.split('\n');
+    const lines = parse(line).lines;
     const lh = 74;
     const tw = Math.max(...lines.map(s => textWidth(s, SPEECH_FONT)));
     const rx = tw / 2 * 1.2 + 44, ry = lines.length * lh / 2 * 1.25 + 34;
@@ -99,8 +119,8 @@
         set(b.tails[ti], { d: `M${p1}L${tip}L${p2}Z` });
         });
         // typewriter reveal
-        const total = d.text.replace(/\n/g, '').length;
-        let shownChars = Math.floor(clamp((t - d.at - 0.08) / Math.max(0.25, total * 0.035)) * total);
+        const P = parse(d);
+        let shownChars = P.times.filter(x => x <= t - d.at).length;
         b.spans.forEach((sp, li) => {
           const full = b.lines[li];
           sp.textContent = full.slice(0, Math.max(0, shownChars));

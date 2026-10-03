@@ -3,8 +3,8 @@
   const { seg, key, el, set, lerp, clamp, motion, toStage } = TS;
   const HZ = 560;
   // Noah's path toward camera (shot B), as pure functions of scene time
-  const noahFeet = t => key(t, [[0.9, 750], [5.6, 2000, 'in']]);
-  const noahX = t => key(t, [[0.9, 930], [5.6, 700, 'inOut']]);
+  const noahFeet = t => key(t, [[0.9, 750], [6.2, 2000, 'in']]);
+  const noahX = t => key(t, [[0.9, 930], [6.2, 700, 'inOut']]);
   const noahS = t => TS.bg.depthScale(noahFeet(t), HZ, 300);
 
   TS.scenes['run'] = {
@@ -53,10 +53,10 @@
 
       // Lu jogging after him in the distance
       const luOn = seg(t, 1.3, 1.8, 'out');
-      const lf = key(t, [[1.3, 600], [5.6, 680, 'linear']]);
+      const lf = key(t, [[1.3, 600], [6.2, 690, 'linear']]);
       const mL = motion.stride(t, 3.0, 0.8);
       S.lu.root.setAttribute('opacity', luOn.toFixed(2));
-      S.lu.pose({ x: key(t, [[1.3, 1250], [5.6, 1130]]), y: lf, s: TS.bg.depthScale(lf, HZ, 440), lean: 5, ...mL,
+      S.lu.pose({ x: key(t, [[1.3, 1250], [6.2, 1120]]), y: lf, s: TS.bg.depthScale(lf, HZ, 440), lean: 5, ...mL,
         head: { mouth: 'grin', open: 0.5, raise: 0.8, blink: 0 } });
 
       // Noah running at the camera

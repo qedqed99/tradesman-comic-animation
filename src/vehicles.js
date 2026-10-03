@@ -33,7 +33,7 @@
     const above = el('g', {}, lean);
     const clipId = 'doorline' + (side.n = (side.n || 0) + 1);
     const cp = el('clipPath', { id: clipId, clipPathUnits: 'userSpaceOnUse' }, el('defs', {}, above));
-    el('rect', { x: -3000, y: -3000, width: 7000, height: 3000 - 168 }, cp);
+    el('rect', { x: -3000, y: -3000, width: 7000, height: 3000 - 196 }, cp);
     const driver = el('g', { 'clip-path': `url(#${clipId})` }, above);
     const wheels = [190, 720].map(x => {
       el('path', { d: `M${x - 92},-60 A92,92 0 0,1 ${x + 92},-60Z`, fill: '#1e1b19' }, lean);

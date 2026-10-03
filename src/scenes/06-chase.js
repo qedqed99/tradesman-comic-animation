@@ -16,16 +16,16 @@
     render(t, cfg, item) {
       const { S, lu, noah, lines } = item.s;
       S.sky.update(t + 80);
-      S.scroller.update(t * 1.9);
+      S.scroller.update(-t * 1.9);
       TS.bg.camera(S.list, { x: 960 + Math.sin(t * 8) * 5, y: 540, zoom: 1, rot: Math.sin(t * 6) * 0.5 });
-      // Lu gains a little, arm stretched toward Noah's shoulder
-      const gain = seg(t, 0, 3.6, 'inOut');
-      const ml = motion.stride(t + 0.13, 3.1, 1);
+      // Lu starts well back and closes in fast, then stretches for Noah's shoulder
+      const gain = seg(t, 0, 2.4, 'out');
+      const ml = motion.stride(t + 0.13, lerp(4.4, 3.2, gain), 1);
       const talk = motion.talk(t, cfg.dialogue[0], 0.9);
       const reach = Math.sin(t * 6) * 4;
       lu.pose({
-        x: lerp(1260, 1120, gain), y: lerp(1230, 1290, gain), s: lerp(1.5, 1.62, gain), lean: -6, bob: ml.bob, legL: ml.legL, legR: ml.legR,
-        armL: { a: 78 + reach, b: -4, hand: 'open' }, armR: ml.armR,
+        x: lerp(1480, 1120, gain), y: lerp(780, 1290, gain), s: TS.bg.depthScale(lerp(780, 1290, gain), 600, 427), lean: lerp(8, -6, gain), bob: ml.bob, legL: ml.legL, legR: ml.legR,
+        armL: gain > 0.6 ? { a: lerp(30, 78, seg(gain, 0.6, 1)) + reach, b: -4, hand: 'open' } : ml.armL, armR: ml.armR,
         head: { tilt: -6, turn: -0.35, lookX: -0.8, raise: 1.2, worried: 0.8, mouth: talk ? 'talk' : 'grit', open: talk || 0.4 },
       });
       const m = motion.stride(t, 3.4, 1);

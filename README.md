@@ -1,4 +1,4 @@
-# The Tradesman: animated short (built entirely in code)
+# Life at Tradesman: animated short (built entirely in code)
 
 Source comic: `source/tradesman-comic.jpg` (1072x8000, 15 panels).
 No image editor, no AI image/video model: characters, sets, lettering, sound and music are all drawn or synthesized by the JavaScript here.
@@ -27,7 +27,7 @@ node tools/build.mjs                           # single-file player -> dist/trad
 ```
 Open `index.html` in a browser for the live player (scrub bar, scene buttons, space = play, arrow keys = step a frame).
 
-## Scenes (all 15 comic panels, about 45 s)
+## Scenes (all 15 comic panels, about 60 s)
 1. `checklist` Noah ticks his work order: "Done.. Check..", "Huh?"
 2. `hey-noah` Lu walks across the lot and waves: "Hey Noah!"
 3. `run` Noah screams and bolts, clipboard goes PLINK PLINK

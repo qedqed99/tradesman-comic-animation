@@ -8,13 +8,42 @@
       el('rect', { x: -400, y: -400, width: 2720, height: 1900, fill: '#6b3b2a' }, cam);
       for (let i = 0; i < 26; i++) el('rect', { x: -400 + i * 110, y: -400, width: 8, height: 1900, fill: '#572e21' }, cam);
       el('rect', { x: -400, y: 520, width: 2720, height: 30, fill: '#4a271b' }, cam);
-      [[140, 170, '#d9c49a'], [1560, 150, '#e1cfa6'], [1780, 260, '#cfb98c']].forEach(([x, y, c], i) => {
-        el('rect', { x, y, width: 170, height: 230, fill: c, stroke: '#1d1a17', 'stroke-width': 5 }, cam);
-        el('circle', { cx: x + 85, cy: y + 90, r: 46, fill: i === 1 ? '#c0392b' : '#2e6fbf', opacity: 0.8 }, cam);
-        el('rect', { x: x + 25, y: y + 160, width: 120, height: 14, fill: '#1d1a17', opacity: 0.6 }, cam);
-        el('rect', { x: x + 40, y: y + 186, width: 90, height: 10, fill: '#1d1a17', opacity: 0.4 }, cam);
+      const KO = "font-family:'Noto Sans KR','Malgun Gothic','Apple SD Gothic Neo','WenQuanYi Zen Hei',sans-serif;font-weight:700";
+      const txt = (x, y, str, size, fill, parent = cam, extra = {}) => { const n = el('text', { x, y, 'text-anchor': 'middle', fill, style: `${KO};font-size:${size}px`, ...extra }, parent); n.textContent = str; return n; };
+      // pig posters (the house speciality is pork belly)
+      const pigPoster = (x, y, rot, bg, label, sub) => {
+        const g = el('g', { transform: `translate(${x} ${y}) rotate(${rot})` }, cam);
+        el('rect', { x: -110, y: -150, width: 220, height: 300, fill: bg, stroke: '#1d1a17', 'stroke-width': 6 }, g);
+        el('ellipse', { cx: 0, cy: 50, rx: 78, ry: 52, fill: '#f4a7b0', stroke: '#1d1a17', 'stroke-width': 4 }, g); // body
+        [-40, 40].forEach(k => el('rect', { x: k - 9, y: 88, width: 18, height: 26, rx: 4, fill: '#f4a7b0', stroke: '#1d1a17', 'stroke-width': 4 }, g));
+        el('path', { d: 'M78,40 q18,-8 10,10 q-8,14 8,12', fill: 'none', stroke: '#1d1a17', 'stroke-width': 4 }, g); // curly tail
+        [-1, 1].forEach(k => el('path', { d: `M${k * 22},-78 L${k * 50},-104 L${k * 52},-66Z`, fill: '#f08f9c', stroke: '#1d1a17', 'stroke-width': 4, 'stroke-linejoin': 'round' }, g));
+        el('circle', { cx: 0, cy: -40, r: 50, fill: '#f6b3bb', stroke: '#1d1a17', 'stroke-width': 4 }, g);
+        el('ellipse', { cx: 0, cy: -26, rx: 22, ry: 15, fill: '#ee8f9b', stroke: '#1d1a17', 'stroke-width': 3 }, g);
+        [-7, 7].forEach(k => el('ellipse', { cx: k, cy: -26, rx: 3.5, ry: 5, fill: '#1d1a17' }, g));
+        [-20, 20].forEach(k => el('circle', { cx: k, cy: -56, r: 5, fill: '#1d1a17' }, g));
+        el('path', { d: 'M-12,-6 Q0,4 12,-6', stroke: '#1d1a17', 'stroke-width': 3, fill: 'none' }, g);
+        txt(0, 132, label, 34, '#1d1a17', g);
+        if (sub) txt(0, -116, sub, 26, '#c0392b', g);
+      };
+      pigPoster(150, 300, -3, '#f7e7b4', '삼겹살', 'PORK BELLY');
+      pigPoster(1770, 320, 4, '#e8f0d8', '돼지갈비', '맛있다!');
+      // menu board
+      const menu = el('g', { transform: 'translate(960 150)' }, cam);
+      el('rect', { x: -330, y: -110, width: 660, height: 230, rx: 10, fill: '#2b2420', stroke: '#c9a46a', 'stroke-width': 8 }, menu);
+      txt(0, -58, '메뉴  MENU', 40, '#ffd23f', menu);
+      [['삼겹살', 'Pork Belly'], ['갈비', 'Galbi'], ['불고기', 'Bulgogi'], ['소주', 'Soju']].forEach(([k, e], i) => {
+        const x = i % 2 ? 160 : -160, y = 4 + Math.floor(i / 2) * 58;
+        txt(x, y, k, 34, '#f4f1e6', menu);
+        txt(x, y + 26, e, 20, '#c9b79a', menu);
       });
-      const lanterns = [260, 700, 1220, 1660].map((x, i) => {
+      // soju poster
+      const soju = el('g', { transform: 'translate(1560 300) rotate(-2)' }, cam);
+      el('rect', { x: -80, y: -120, width: 160, height: 240, fill: '#d9efe0', stroke: '#1d1a17', 'stroke-width': 5 }, soju);
+      el('path', { d: 'M-18,70 L-18,-10 Q-18,-26 -8,-36 L-8,-80 L8,-80 L8,-36 Q18,-26 18,-10 L18,70Z', fill: '#2f8a4a', stroke: '#1d1a17', 'stroke-width': 4 }, soju);
+      el('rect', { x: -18, y: 0, width: 36, height: 34, fill: '#f4f1e6' }, soju);
+      txt(0, 104, '소주', 30, '#1d1a17', soju);
+      const lanterns = [400, 580, 1340, 1520].map((x, i) => {
         const g = el('g', {}, cam);
         el('path', { d: 'M0,-300 L0,-40', stroke: '#1d1a17', 'stroke-width': 4 }, g);
         el('ellipse', { cx: 0, cy: 30, rx: 120, ry: 110, fill: '#ffb347', opacity: 0.18 }, g);
@@ -33,6 +62,11 @@
       set(stickL.g, { transform: 'scale(-1 1)' });
       const bottle = el('g', {}, boss.hand.R);
       el('path', { d: 'M-12,10 L-12,-50 Q-12,-62 -5,-70 L-5,-92 L5,-92 L5,-70 Q12,-62 12,-50 L12,10Z', fill: '#2f8a4a', stroke: '#1d1a17', 'stroke-width': 3.5, opacity: 0.95 }, bottle);
+      // ceiling exhaust duct over the grill
+      const duct = el('g', {}, cam);
+      el('rect', { x: 915, y: -400, width: 90, height: 690, fill: '#b9bcbf', stroke: '#1d1a17', 'stroke-width': 5 }, duct);
+      for (let k = 0; k < 7; k++) el('path', { d: `M915,${-360 + k * 90} L1005,${-360 + k * 90}`, stroke: '#7d8083', 'stroke-width': 5 }, duct);
+      el('path', { d: 'M915,280 L880,330 L1040,330 L1005,280Z', fill: '#c9cccf', stroke: '#1d1a17', 'stroke-width': 5 }, duct);
       // table + grill
       el('path', { d: 'M-200,700 L2120,700 L2120,1300 L-200,1300Z', fill: '#8a5a36', stroke: '#1d1a17', 'stroke-width': 6 }, cam);
       el('path', { d: 'M-200,700 L2120,700 L2120,760 L-200,760Z', fill: '#a8754a' }, cam);
@@ -49,25 +83,47 @@
         el('path', { d: 'M-40,-4 Q0,-12 40,-4', stroke: '#f0d2b8', 'stroke-width': 3, fill: 'none' }, cam).remove();
         return { m, x: 790 + i * 55 + r() * 10, y: 715 + (i % 3) * 18, rot: -15 + r() * 30, o: r() * 6 };
       });
-      // side dishes (banchan)
-      [[420, 790, '#d8432a'], [560, 840, '#7fa65a'], [1360, 790, '#f2c94c'], [1500, 845, '#e8e1cf'], [300, 870, '#c96f3b'], [1630, 880, '#7fa65a']].forEach(([x, y, c]) => {
+      // banchan: kimchi, pickled radish, bean sprouts, ssamjang, japchae
+      [[420, 790, '#d8432a'], [560, 845, '#f2e6a8'], [1360, 790, '#e8e1cf'], [1500, 845, '#8a5a2b'], [300, 875, '#c98a4b']].forEach(([x, y, c]) => {
         el('ellipse', { cx: x, cy: y, rx: 70, ry: 26, fill: '#f4f1e6', stroke: '#1d1a17', 'stroke-width': 4 }, cam);
         el('ellipse', { cx: x, cy: y - 4, rx: 50, ry: 15, fill: c }, cam);
+      });
+      // lettuce basket for wraps
+      el('path', { d: 'M1560,900 L1760,900 L1735,960 L1585,960Z', fill: '#c9a46a', stroke: '#1d1a17', 'stroke-width': 4 }, cam);
+      for (let k = 0; k < 5; k++) el('ellipse', { cx: 1590 + k * 40, cy: 892 - (k % 2) * 10, rx: 38, ry: 22, fill: k % 2 ? '#7fb35a' : '#94c96c', stroke: '#3f6b2a', 'stroke-width': 3 }, cam);
+      // bubbling stone-pot stew
+      el('ellipse', { cx: 1760, cy: 790, rx: 80, ry: 30, fill: '#2b2b2b', stroke: '#1d1a17', 'stroke-width': 4 }, cam);
+      el('ellipse', { cx: 1760, cy: 784, rx: 64, ry: 20, fill: '#c0392b' }, cam);
+      const stew = TS.bg.puffs(el('g', {}, cam), { n: 5, seed: 4, color: '#ffffff', x: 1760, y: 780, spreadX: 60, rise: 140, size: 22, period: 1.8 });
+      // soju bottles + shot glasses
+      [[650, 760], [1270, 760]].forEach(([x, y]) => {
+        el('path', { d: `M${x - 16},${y} L${x - 16},${y - 70} Q${x - 16},${y - 84} ${x - 7},${y - 92} L${x - 7},${y - 120} L${x + 7},${y - 120} L${x + 7},${y - 92} Q${x + 16},${y - 84} ${x + 16},${y - 70} L${x + 16},${y}Z`, fill: '#2f8a4a', stroke: '#1d1a17', 'stroke-width': 4, opacity: 0.95 }, cam);
+        el('rect', { x: x - 16, y: y - 60, width: 32, height: 26, fill: '#f4f1e6' }, cam);
+        el('path', { d: `M${x + 30},${y - 30} L${x + 60},${y - 30} L${x + 56},${y} L${x + 34},${y}Z`, fill: '#e8f4f4', stroke: '#1d1a17', 'stroke-width': 3, opacity: 0.85 }, cam);
+      });
+      // metal chopsticks and spoons at each place
+      [470, 960, 1450].forEach(x => {
+        el('path', { d: `M${x - 40},1010 L${x + 50},990 M${x - 40},1022 L${x + 52},1004`, stroke: '#9ea2a6', 'stroke-width': 6, 'stroke-linecap': 'round' }, cam);
+        el('ellipse', { cx: x - 60, cy: 1030, rx: 20, ry: 10, fill: '#b9bcbf', stroke: '#1d1a17', 'stroke-width': 3 }, cam);
+        el('path', { d: `M${x - 42},1026 L${x + 40},1048`, stroke: '#9ea2a6', 'stroke-width': 6, 'stroke-linecap': 'round' }, cam);
       });
       const smoke = TS.bg.puffs(el('g', {}, cam), { n: 12, seed: 9, color: '#f3efe6', x: 960, y: 700, spreadX: 300, rise: 230, size: 38, period: 2.2 });
       // end card
       const card = el('g', { opacity: 0 }, root);
       el('rect', { width: 1920, height: 1080, fill: '#16130f', opacity: 0.55 }, card);
-      const title = el('text', { x: 960, y: 560, 'text-anchor': 'middle', fill: '#f4f1e6', stroke: '#1d1a17', 'stroke-width': 14, 'paint-order': 'stroke', style: 'font-family:Bangers, Impact, sans-serif;font-size:190px;letter-spacing:8px' }, card);
-      title.textContent = 'THE TRADESMAN';
+      const title = el('text', { x: 960, y: 560, 'text-anchor': 'middle', fill: '#f4f1e6', stroke: '#1d1a17', 'stroke-width': 14, 'paint-order': 'stroke', style: 'font-family:Bangers, Impact, sans-serif;font-size:170px;letter-spacing:7px' }, card);
+      title.textContent = 'LIFE AT TRADESMAN';
       const sub = el('text', { x: 960, y: 680, 'text-anchor': 'middle', fill: '#ffd23f', stroke: '#1d1a17', 'stroke-width': 10, 'paint-order': 'stroke', style: 'font-family:Bangers, Impact, sans-serif;font-size:90px;letter-spacing:6px' }, card);
       sub.textContent = 'THE END';
-      item.s = { cam, boss, noah, lu, meat, smoke, lanterns, card };
+      item.s = { cam, boss, noah, lu, meat, smoke, lanterns, card, stew };
     },
     render(t, cfg, item) {
-      const { cam, boss, noah, lu, meat, smoke, lanterns, card } = item.s;
-      const z = 1.06 - t * 0.012;
-      set(cam, { transform: `translate(960 540) scale(${z}) translate(-960 -560)` });
+      const { cam, boss, noah, lu, meat, smoke, lanterns, card, stew } = item.s;
+      // start tight on the three of them, pull back quickly to the whole table
+      const out = seg(t, 0.2, 2.2, 'out');
+      const z = lerp(2.0, 1.0, out), cy = lerp(470, 560, out);
+      set(cam, { transform: `translate(960 540) scale(${z.toFixed(4)}) translate(-960 ${(-cy).toFixed(1)})` });
+      stew.update(t, 0.6);
       lanterns.forEach(L => set(L.g, { transform: `translate(${L.x} ${L.y}) rotate(${Math.sin(t * 1.5 + L.o) * 3})` }));
       const chew = Math.abs(Math.sin(t * 7));
       boss.pose({ x: 470, y: 960, s: 1.25, shadow: false, lean: 3,

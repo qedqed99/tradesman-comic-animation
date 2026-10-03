@@ -6,7 +6,7 @@
       const set_ = TS.sets.parkingLot(root, { horizon: 610 });
       const noah = TS.makePuppet(set_.layers.actors.g, 'noah');
       const clip = TS.props.clipboard(noah.hand.L);
-      set(clip.g, { transform: 'translate(-22 8) rotate(-7)' });
+      set(clip.g, { transform: 'translate(-38 58) rotate(-12) scale(0.86)' });
       const pen = TS.props.pen(noah.hand.R);
       item.s = { set: set_, noah, clip, pen };
       item.anchors = { noah: () => toStage(noah.mouthG, 0, 10) };
@@ -38,9 +38,9 @@
         head: startled
           ? { tilt: -5, turn: 0.35, lookX: 0.95, lookY: -0.1, eyes: 'wide', raise: 1.2, mouth: talk ? 'o' : 'o', open: talk || 0.5, blink: 0 }
           : { tilt: 6, nod: 9, turn: -0.15, lookX: -0.3, lookY: 1, raise: -0.4, mouth: talk ? 'talk' : 'flat', open: (talk || 0) * 0.55, blink: Math.max(0.38, motion.blink(t, 2)) },
-        armL: { a: 20 + (startled ? 6 : 0), b: -105 + (startled ? 18 * snap : 0) },
-        armR: startled ? { a: lerp(20, 14, snap), b: lerp(-134, -60, snap) }
-                       : { a: 20 + (writing ? scribble * 0.4 : 0), b: -134 + rowY * 4 + (writing ? scribble : 0) },
+        armL: { a: 32 + (startled ? 6 : 0), b: -100 + (startled ? 18 * snap : 0) },
+        armR: startled ? { a: lerp(15, 14, snap), b: lerp(-91, -60, snap) }
+                       : { a: 15 + (writing ? scribble * 0.4 : 0), b: -91 + rowY * 5 + (writing ? scribble : 0) },
       });
       set(pen.g, { transform: `rotate(${startled ? 30 : 0})` });
       // the two checks are drawn on the beat of the tick sounds; row 0 is already done

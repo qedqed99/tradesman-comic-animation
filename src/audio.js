@@ -63,6 +63,13 @@
     },
     // phone dialing: two quick beeps
     ring(ctx, out, t) { for (const k of [0, 0.16]) osc(ctx, 'sine', 1320, 1320, t + k, 0.1, env(ctx, out, t + k, 0.18, 0.005, 0.1)); },
+    // incoming call: classic double trill
+    phonering(ctx, out, t) {
+      for (const k of [0, 0.5]) for (let i = 0; i < 8; i++) {
+        const f = i % 2 ? 1180 : 940, tt = t + k + i * 0.04;
+        osc(ctx, 'square', f, f, tt, 0.04, env(ctx, out, tt, 0.06, 0.003, 0.04));
+      }
+    },
     // hot tub: a burst of bubbly blips over low rumble
     bubbles(ctx, out, t) {
       noiseHit(ctx, env(ctx, out, t, 0.25, 0.2, 1.4), t, 1.6, 'lowpass', 300, 200);
@@ -73,14 +80,24 @@
     run(ctx, out, t) { for (let k = 0; k < 7; k++) osc(ctx, 'sine', 140, 60, t + k * 0.15, 0.07, env(ctx, out, t + k * 0.15, 0.35, 0.003, 0.08)); },
     // tyre screech: squealing band of noise plus a wobbling whine
     screech(ctx, out, t) {
-      noiseHit(ctx, env(ctx, out, t, 0.35, 0.05, 1.3), t, 1.35, 'bandpass', 2600, 1900, 9);
-      const g = env(ctx, out, t, 0.08, 0.05, 1.3);
-      const o = osc(ctx, 'sawtooth', 1900, 1500, t, 1.35, null);
-      const lfo = ctx.createOscillator(); lfo.frequency.value = 23; const lg = ctx.createGain(); lg.gain.value = 60;
-      lfo.connect(lg); lg.connect(o.frequency); lfo.start(t); lfo.stop(t + 1.4);
+      const D = 2.3;
+      noiseHit(ctx, env(ctx, out, t, 0.9, 0.04, D), t, D + 0.05, 'bandpass', 2700, 1700, 8);
+      noiseHit(ctx, env(ctx, out, t, 0.45, 0.04, D), t, D + 0.05, 'bandpass', 1200, 900, 5);
+      const g = env(ctx, out, t, 0.22, 0.04, D);
+      const o = osc(ctx, 'sawtooth', 2000, 1400, t, D + 0.05, null);
+      const lfo = ctx.createOscillator(); lfo.frequency.value = 23; const lg = ctx.createGain(); lg.gain.value = 70;
+      lfo.connect(lg); lg.connect(o.frequency); lfo.start(t); lfo.stop(t + D + 0.1);
       const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1800; bp.Q.value = 3; o.connect(bp); bp.connect(g);
     },
-    honk(ctx, out, t) { for (const f of [392, 494]) osc(ctx, 'square', f, f, t, 0.35, env(ctx, out, t, 0.07, 0.01, 0.33)); },
+    // big air horn: a minor-chord stack of buzzy saws, about 1.4 s
+    honk(ctx, out, t) {
+      const D = 1.4;
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2400; lp.connect(out);
+      const g = ctx.createGain(); g.connect(lp);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.3, t + 0.06);
+      g.gain.setValueAtTime(0.3, t + D - 0.15); g.gain.exponentialRampToValueAtTime(0.0001, t + D);
+      for (const f of [233, 277, 349, 466]) { osc(ctx, 'sawtooth', f, f * 0.995, t, D, g); osc(ctx, 'sawtooth', f * 1.004, f, t, D, g); }
+    },
     // record scratch for the "No!"
     scratch(ctx, out, t) {
       noiseHit(ctx, env(ctx, out, t, 0.45, 0.01, 0.12), t, 0.14, 'bandpass', 900, 2600, 4);
@@ -131,11 +148,22 @@
     }
   }
 
+  // master bus: the browser's default compressor, then a soft clipper so loud effects
+  // (screech, horn) get rounded off instead of distorting
+  function master(ctx) {
+    const comp = ctx.createDynamicsCompressor();
+    const clip = ctx.createWaveShaper();
+    const curve = new Float32Array(2048);
+    for (let i = 0; i < curve.length; i++) { const x = (i / (curve.length - 1)) * 2 - 1; curve[i] = Math.tanh(x * 1.6) / Math.tanh(1.6) * 0.94; }
+    clip.curve = curve;
+    comp.connect(clip); clip.connect(ctx.destination);
+    return comp;
+  }
+
   // offline render -> base64 WAV (used by tools/render.mjs)
   async function renderWav(cues, music, from, to, sampleRate = 48000) {
     const ctx = new OfflineAudioContext(2, Math.ceil((to - from) * sampleRate), sampleRate);
-    const master = ctx.createDynamicsCompressor(); master.connect(ctx.destination);
-    schedule(ctx, master, cues, music, from, to);
+    schedule(ctx, master(ctx), cues, music, from, to);
     const buf = await ctx.startRendering();
     const n = buf.length, ch = [buf.getChannelData(0), buf.getChannelData(1)];
     const out = new DataView(new ArrayBuffer(44 + n * 4));
@@ -150,5 +178,5 @@
     return btoa(bin);
   }
 
-  TS.audio = { SFX, MUSIC, schedule, renderWav };
+  TS.audio = { SFX, MUSIC, schedule, renderWav, master };
 })(window.TS);

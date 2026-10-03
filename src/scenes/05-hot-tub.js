@@ -46,20 +46,32 @@
       el('path', { d: `M100,${WATER + 110} Q960,${WATER + 400} 1820,${WATER + 110}`, stroke: '#3a3a3a', 'stroke-width': 18, fill: 'none' }, cam);
       el('path', { d: `M140,${WATER} A820,205 0 0,0 1780,${WATER}`, stroke: '#a26a43', 'stroke-width': 26, fill: 'none' }, cam);
       const steam = TS.bg.puffs(el('g', {}, cam), { n: 10, seed: 3, color: '#ffffff', x: 960, y: WATER, spreadX: 1200, rise: 300, size: 50, period: 3 });
-      item.s = { cam, boss, ripples, bubbles, steam, clouds };
+      item.s = { cam, boss, ripples, bubbles, steam, clouds, phone };
       item.anchors = { boss: () => toStage(boss.mouthG, 0, 12) };
     },
     render(t, cfg, item) {
-      const { cam, boss, ripples, bubbles, steam, clouds } = item.s;
+      const { cam, boss, ripples, bubbles, steam, clouds, phone } = item.s;
       clouds.update(t);
-      const z = 1 + t * 0.03;
+      const z = 1 + t * 0.025;
       set(cam, { transform: `translate(960 540) scale(${z}) translate(-990 -540)` });
-      const talk = motion.talk(t, cfg.dialogue[0], 1);
-      const shout = t > cfg.dialogue[0].at;
+      // beats: relaxing (blub blub) -> phone rings -> picks up -> listens -> shouts
+      const line = cfg.dialogue[0];
+      const ring = (cfg.sfx.find(x => x.sound === 'phonering') || { at: 2.6 }).at;
+      const pick = seg(t, ring + 0.35, ring + 0.75, 'inOut');
+      const listening = t > ring + 0.75 && t < line.at;
+      const talk = motion.talk(t, line, 1);
+      const shout = t > line.at;
+      phone.g.setAttribute('display', pick > 0.15 ? 'inline' : 'none');
+      const relaxed = { a: 72 + Math.sin(t * 1.3) * 3, b: -12 };
       boss.pose({
-        x: 1180, y: 1030, s: 1.62, shadow: false, armsFront: true, lean: Math.sin(t * 2) * 1.5,
-        armL: { a: 120, b: 124 }, armR: { a: 55 + Math.sin(t * 3) * 4, b: -10 },
-        head: { tilt: shout ? -6 : 3, turn: -0.25, mouth: talk ? 'talk' : (shout ? 'grin' : 'smile'), open: talk || 0.5, angry: shout ? 0.6 : 0, raise: shout ? 0 : 0.5 },
+        x: 1180, y: 1030, s: 1.62, shadow: false, armsFront: true, lean: Math.sin(t * 1.4) * 1.5,
+        armL: { a: lerp(relaxed.a, 120, pick), b: lerp(relaxed.b, 124, pick) },
+        armR: { a: lerp(relaxed.a + 2, 60, pick) + Math.sin(t * 3) * 3 * pick, b: lerp(-12, -10, pick) },
+        head: shout
+          ? { tilt: -6, turn: -0.25, mouth: talk ? 'talk' : 'grin', open: talk || 0.55, angry: 0.6 }
+          : listening
+            ? { tilt: 4, nod: Math.sin(t * 6) * 3, turn: -0.3, mouth: 'flat', raise: 0.8 }
+            : { tilt: lerp(-8, 2, pick), turn: lerp(0, -0.25, pick), mouth: 'grin', open: lerp(0.7, 0.3, pick), raise: 0.6 },
       });
       ripples.forEach((rp, i) => { const k = (t * 0.6 + i / 3) % 1; set(rp, { cx: 1180, cy: WATER + 10, rx: 120 + k * 260, ry: 26 + k * 60, opacity: (1 - k) * 0.8 }); });
       bubbles.forEach(b => { const k = (t * 0.9 + b.o) % 1; set(b.c, { cx: b.x + Math.sin(t * 3 + b.o * 9) * 6, cy: b.y - k * 40, r: b.s * (0.5 + k * 0.6), opacity: k < 0.9 ? 0.9 : (1 - k) * 9 }); });

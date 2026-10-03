@@ -29,9 +29,9 @@
       }));
       S.noah.pose(seat(S, 'noah', {
         armL: { a: lerp(15, 160, cheer) - pump, b: -30 }, armR: { a: lerp(15, 160, cheer) + pump, b: -30 },
-        head: { tilt: Math.sin(t * 8) * 3, mouth: tl ? 'talk' : 'grin', open: tl || 0.6, eyes: 'happy' },
+        head: { tilt: Math.sin(t * 8) * 3, mouth: tl || motion.talk(t, chip, 1) ? 'talk' : 'grin', open: tl || motion.talk(t, chip, 1) || 0.6, eyes: 'happy' },
       }));
-      const tc = motion.talk(t, chip, 1);
+      const tc = motion.talk(t, chip, 1) || tl;
       S.boss.pose(seat(S, 'boss', {
         armL: { a: 22, b: -95 }, armR: { a: 22, b: -95 },
         head: { tilt: t > chip.at ? -5 : 2, turn: -0.15, mouth: tc ? 'talk' : 'grin', open: tc || 0.5, raise: t > chip.at ? 1 : 0.3 },

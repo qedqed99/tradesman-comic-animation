@@ -22,8 +22,8 @@
       const talk = motion.talk(t, cfg.dialogue[0], 1);
       const wave = Math.sin(t * 7) * 10;
       boss.pose({
-        x: lerp(400, 300, lean), y: -10, s: 0.6, shadow: false, lean: lerp(0, -12, lean),
-        armL: { a: lerp(20, 100, lean) + wave * 0.4, b: lerp(0, -18, lean) + wave, hand: 'open' },
+        x: lerp(400, 320, lean), y: 30, s: 0.75, shadow: false, lean: lerp(0, -8, lean),
+        armL: { a: lerp(20, 88, lean) + wave * 0.3, b: lerp(0, 8, lean) + wave, hand: 'open' },
         armR: { a: 15, b: -60 },
         head: { tilt: -4, turn: -0.45, lookX: -0.8, mouth: talk ? 'talk' : 'grin', open: talk || 0.55, raise: 0.6, blink: motion.blink(t, 6) },
       });
