@@ -2,3 +2,7 @@ renders/
 dist/
 node_modules/
 *.log
+clay/frames/
+clay/stills/
+clay/voices/
+__pycache__/
