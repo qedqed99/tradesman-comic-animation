@@ -65,6 +65,15 @@ dd { margin: 0; font-size: 15px; }
 .ask { border: 1.5px dashed var(--pencil); padding: 12px 14px 12px 16px; }
 .ask h3 { color: var(--pencil); }
 .ask ol { margin: 0; padding-left: 1.3em; display: grid; gap: 4px; font: 400 18px/1.3 var(--hand); color: var(--ink); }
+.turn { border-top: 1.5px solid var(--ink); padding: 18px 20px; display: grid; gap: 12px; }
+.turn h3 { margin: 0; font: 700 13px/1 var(--label); letter-spacing: .14em; text-transform: uppercase; color: var(--pin); }
+.turn .views { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.turn .faces { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 560px) { .turn .views { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.turn figure { margin: 0; display: grid; gap: 4px; }
+.turn img { width: 100%; height: auto; display: block; border: 1px solid var(--rule); }
+.turn figcaption { font: 400 16px/1.2 var(--hand); color: var(--pencil); text-align: center; }
+.turn p { margin: 0; font-size: 15px; color: var(--muted); max-width: 72ch; }
 .lineup { background: var(--card); border: 1.5px solid var(--ink); padding: 18px 20px; display: grid; gap: 14px; }
 .lineup h2 { margin: 0; font: 800 26px/1.1 var(--display); }
 .lineup .pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
@@ -79,9 +88,9 @@ dd { margin: 0; font-size: 15px; }
 
 <div class="wrap">
   <header>
-    <div class="eyebrow">Life at Tradesman · clay version · draft 3</div>
+    <div class="eyebrow">Life at Tradesman · clay version · draft 4 · first clay sculpts</div>
     <h1>Clay model sheets for Noah, Lu and the Boss</h1>
-    <p>Drafted from your comic, not from the v1 cartoon puppets. Each sheet pins down what has to stay true to the comic (silhouette, hair, face, outfit, colors) so the clay builds match it. Correct anything that is wrong. The handwritten questions are the things I could not tell from the comic.</p>
+    <p>Drafted from your comic, not from the v1 cartoon puppets, and now with a first clay sculpt of each character at the bottom of their sheet. Each sheet pins down what has to stay true to the comic (silhouette, hair, face, outfit, colors) so the clay builds match it. Correct anything that is wrong. The handwritten questions are the things I could not tell from the comic.</p>
   </header>
 
   <section class="how" aria-label="How to use these sheets">
@@ -135,6 +144,12 @@ dd { margin: 0; font-size: 15px; }
           </ol></div>
       </div>
     </div>
+      <div class="turn">
+      <h3>Clay turnaround · first sculpt</h3>
+      <p>Shaggy brown locks with the fringe at his brows, big brown eyes, the red cape tied at the throat, and the little hot tub with steam on his tee.</p>
+      <div class="views"><figure><img src="{{turn:noah_front}}" alt="Clay noah front view"><figcaption>front</figcaption></figure><figure><img src="{{turn:noah_three-quarter}}" alt="Clay noah ¾ view"><figcaption>¾</figcaption></figure><figure><img src="{{turn:noah_side}}" alt="Clay noah side view"><figcaption>side</figcaption></figure><figure><img src="{{turn:noah_back}}" alt="Clay noah back view"><figcaption>back</figcaption></figure></div>
+      <div class="faces"><figure><img src="{{turn:noah_expr_focused}}" alt="Clay noah, focused expression"><figcaption>focused</figcaption></figure><figure><img src="{{turn:noah_expr_startled}}" alt="Clay noah, startled expression"><figcaption>startled</figcaption></figure><figure><img src="{{turn:noah_expr_yell}}" alt="Clay noah, yell expression"><figcaption>yell</figcaption></figure></div>
+    </div>
   </article>
 
   <article class="sheet" id="lu">
@@ -179,6 +194,12 @@ dd { margin: 0; font-size: 15px; }
             <li><s>Olympic tee?</s> Yes, keep the rings (answered).</li>
           </ol></div>
       </div>
+    </div>
+      <div class="turn">
+      <h3>Clay turnaround · first sculpt</h3>
+      <p>Swept-up black hair, thin amber glasses, a faint five o'clock shadow on the jaw, and the Olympic rings on his cream tee.</p>
+      <div class="views"><figure><img src="{{turn:lu_front}}" alt="Clay lu front view"><figcaption>front</figcaption></figure><figure><img src="{{turn:lu_three-quarter}}" alt="Clay lu ¾ view"><figcaption>¾</figcaption></figure><figure><img src="{{turn:lu_side}}" alt="Clay lu side view"><figcaption>side</figcaption></figure><figure><img src="{{turn:lu_back}}" alt="Clay lu back view"><figcaption>back</figcaption></figure></div>
+      <div class="faces"><figure><img src="{{turn:lu_expr_beaming}}" alt="Clay lu, beaming expression"><figcaption>beaming</figcaption></figure><figure><img src="{{turn:lu_expr_determined}}" alt="Clay lu, determined expression"><figcaption>determined</figcaption></figure><figure><img src="{{turn:lu_expr_no}}" alt="Clay lu, No! expression"><figcaption>No!</figcaption></figure></div>
     </div>
   </article>
 
@@ -226,11 +247,18 @@ dd { margin: 0; font-size: 15px; }
           </ol></div>
       </div>
     </div>
+      <div class="turn">
+      <h3>Clay turnaround · first sculpt</h3>
+      <p>Beanie and shades, a light-brown tooled-clay beard with grey flecks, the shredded old green tee with holes, and gray sweatpants.</p>
+      <div class="views"><figure><img src="{{turn:boss_front}}" alt="Clay boss front view"><figcaption>front</figcaption></figure><figure><img src="{{turn:boss_three-quarter}}" alt="Clay boss ¾ view"><figcaption>¾</figcaption></figure><figure><img src="{{turn:boss_side}}" alt="Clay boss side view"><figcaption>side</figcaption></figure><figure><img src="{{turn:boss_back}}" alt="Clay boss back view"><figcaption>back</figcaption></figure></div>
+      <div class="faces"><figure><img src="{{turn:boss_expr_laugh}}" alt="Clay boss, laugh expression"><figcaption>laugh</figcaption></figure><figure><img src="{{turn:boss_expr_on-it}}" alt="Clay boss, on it expression"><figcaption>on it</figcaption></figure><figure><img src="{{turn:boss_expr_surprised}}" alt="Clay boss, surprised expression"><figcaption>surprised</figcaption></figure></div>
+    </div>
   </article>
 
   <section class="lineup" aria-label="Line-up">
     <h2>Line-up and scale</h2>
     <p>In the comic Noah's head reaches about Lu's chest. The Boss is the widest, and Lu is the tallest and thinnest. The clay builds will keep those ratios so the trio reads at a glance even in wide shots.</p>
+    <figure><img src="{{turn:lineup}}" alt="Clay line-up of Lu, Noah and the Boss"><figcaption>the clay line-up: Lu, Noah, the Boss</figcaption></figure>
     <div class="pair">
       <figure><img src="{{trio-car}}" alt="Comic panel: Lu, Noah and the Boss in the car"><figcaption>side by side in the car: head sizes</figcaption></figure>
       <figure><img src="{{trio-bbq}}" alt="Comic panel: the trio at the Korean BBQ"><figcaption>at the table: builds and outfits together</figcaption></figure>
