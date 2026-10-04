@@ -1,0 +1,239 @@
+<title>Tradesman Clay Model Sheets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Archivo+Narrow:wght@500;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+/* Layout: an animation studio model sheet. Each character gets one pinned sheet: comic reference on the left, the build spec on the right, open questions in handwriting. */
+:root {
+  --paper: #f3f1ea;      /* sheet stock */
+  --grid: #dfe3e6;       /* faint blue-grey layout grid */
+  --ink: #1f2326;
+  --muted: #5d656b;
+  --pencil: #2f5f8a;     /* blue construction pencil, used for annotations */
+  --pin: #c4472e;        /* Noah's scarf red, the one accent */
+  --card: #fbfaf6;
+  --rule: #c9ccc8;
+  --display: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  --label: 'Archivo Narrow', 'Arial Narrow', Arial, sans-serif;
+  --hand: 'Patrick Hand', 'Comic Sans MS', 'Segoe Print', cursive;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #1b1e20; --grid: #262a2d; --ink: #ebe8df; --muted: #a3a9ad; --pencil: #8db8dc; --pin: #e2674c; --card: #222628; --rule: #3a3f42; color-scheme: dark; } }
+:root[data-theme="dark"] { --paper: #1b1e20; --grid: #262a2d; --ink: #ebe8df; --muted: #a3a9ad; --pencil: #8db8dc; --pin: #e2674c; --card: #222628; --rule: #3a3f42; color-scheme: dark; }
+
+body {
+  background: var(--paper);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 28px 28px;
+  color: var(--ink); font: 400 16px/1.55 var(--display);
+}
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 56px; display: grid; gap: 36px; }
+header { display: grid; gap: 10px; max-width: 72ch; }
+.eyebrow { font: 700 13px/1 var(--label); letter-spacing: .14em; text-transform: uppercase; color: var(--pin); }
+h1 { font: 800 clamp(32px, 5vw, 52px)/1.02 var(--display); margin: 0; letter-spacing: -.01em; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); }
+.how { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.how div { background: var(--card); border: 1px solid var(--rule); padding: 14px 16px; min-width: 0; }
+.how b { display: block; font: 700 13px/1.2 var(--label); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px; color: var(--pencil); }
+.how p { margin: 0; font-size: 15px; }
+
+.sheet { background: var(--card); border: 1.5px solid var(--ink); box-shadow: 6px 6px 0 var(--rule); display: grid; }
+.sheet-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; padding: 14px 20px; border-bottom: 1.5px solid var(--ink); }
+.sheet-head h2 { margin: 0; font: 800 34px/1 var(--display); }
+.sheet-head .role { font: 500 15px/1.3 var(--label); color: var(--muted); }
+.sheet-head .no { margin-left: auto; font: 700 13px/1 var(--label); letter-spacing: .12em; color: var(--muted); font-variant-numeric: tabular-nums; }
+.sheet-body { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); }
+@media (max-width: 820px) { .sheet-body { grid-template-columns: 1fr; } }
+.refs { padding: 18px 20px; border-right: 1px dashed var(--rule); display: grid; gap: 14px; align-content: start; }
+@media (max-width: 820px) { .refs { border-right: 0; border-bottom: 1px dashed var(--rule); } }
+.refs figure { margin: 0; display: grid; gap: 4px; }
+.refs img { display: block; width: 100%; height: auto; border: 1px solid var(--rule); }
+.refs figcaption { font: 400 17px/1.25 var(--hand); color: var(--pencil); }
+.refs .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.spec { padding: 18px 20px; display: grid; gap: 18px; align-content: start; min-width: 0; }
+.spec h3 { margin: 0 0 6px; font: 700 13px/1 var(--label); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+dl { margin: 0; display: grid; grid-template-columns: 8.5em minmax(0, 1fr); gap: 7px 14px; }
+dt { font: 700 14px/1.45 var(--label); }
+dd { margin: 0; font-size: 15px; }
+.swatches { display: flex; flex-wrap: wrap; gap: 10px; }
+.sw { display: grid; grid-template-columns: 30px auto; align-items: center; gap: 2px 8px; font-size: 13px; }
+.sw i { grid-row: span 2; width: 30px; height: 30px; border-radius: 50% 45% 52% 48%; border: 1px solid rgba(0,0,0,.25); box-shadow: inset -4px -5px 7px rgba(0,0,0,.18), inset 3px 3px 5px rgba(255,255,255,.25); }
+.sw span { font: 700 13px/1.1 var(--label); }
+.sw code { font: 12px/1.1 ui-monospace, Menlo, monospace; color: var(--muted); }
+.clay { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; font-size: 15px; }
+.ask { border: 1.5px dashed var(--pencil); padding: 12px 14px 12px 16px; }
+.ask h3 { color: var(--pencil); }
+.ask ol { margin: 0; padding-left: 1.3em; display: grid; gap: 4px; font: 400 18px/1.3 var(--hand); color: var(--ink); }
+.lineup { background: var(--card); border: 1.5px solid var(--ink); padding: 18px 20px; display: grid; gap: 14px; }
+.lineup h2 { margin: 0; font: 800 26px/1.1 var(--display); }
+.lineup .pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.lineup figure { margin: 0; display: grid; gap: 4px; }
+.lineup img { width: 100%; height: auto; display: block; border: 1px solid var(--rule); }
+.lineup figcaption { font: 400 17px/1.25 var(--hand); color: var(--pencil); }
+.lineup p { margin: 0; max-width: 72ch; }
+.next { display: grid; gap: 8px; max-width: 72ch; }
+.next h2 { margin: 0; font: 800 26px/1.1 var(--display); }
+.next p { margin: 0; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Life at Tradesman · clay version · draft 1</div>
+    <h1>Clay model sheets for Noah, Lu and the Boss</h1>
+    <p>Drafted from your comic, not from the v1 cartoon puppets. Each sheet pins down what has to stay true to the comic (silhouette, hair, face, outfit, colors) so the clay builds match it. Correct anything that is wrong. The handwritten questions are the things I could not tell from the comic.</p>
+  </header>
+
+  <section class="how" aria-label="How to use these sheets">
+    <div><b>Correct in plain words</b><p>Reply in the thread, e.g. "Lu's glasses are thinner and more round" or "Boss wears jeans". Short notes are enough.</p></div>
+    <div><b>Or mark it up</b><p>Screenshot a sheet, scribble on it on your phone, and drop the image in the thread. Rough is fine.</p></div>
+    <div><b>Then a clay turnaround</b><p>Once the sheets are right, I sculpt each character in Blender and send front, ¾, side and back views plus three expressions for approval before any scene is rendered.</p></div>
+  </section>
+
+  <article class="sheet" id="noah">
+    <div class="sheet-head"><h2>Noah</h2><span class="role">The kid with the clipboard and the red scarf</span><span class="no">SHEET 1 / 3</span></div>
+    <div class="sheet-body">
+      <div class="refs">
+        <figure><img src="{{noah-phone}}" alt="Comic panel: Noah running and shouting into a phone, red scarf flying"><figcaption>best face reference: big brown eyes, shaggy fringe, scarf knotted at the throat</figcaption></figure>
+        <div class="pair">
+          <figure><img src="{{noah-check}}" alt="Comic panel: Noah writing on a clipboard"><figcaption>focused face, pen grip, clipboard</figcaption></figure>
+          <figure><img src="{{chase}}" alt="Comic panel: Lu chasing Noah down the road, seen from behind"><figcaption>back view: scarf tails, shorts, boots</figcaption></figure>
+        </div>
+      </div>
+      <div class="spec">
+        <div><h3>What must read</h3>
+          <dl>
+            <dt>Silhouette</dt><dd>Small, slim kid, about chest-height to Lu. The scarf tails stream out behind him whenever he moves.</dd>
+            <dt>Head</dt><dd>Round face, soft chin, small button nose, big brown eyes with white highlights, very expressive brows.</dd>
+            <dt>Hair</dt><dd>Medium brown, short and shaggy. Pointed tufts fall over the forehead, with a few strands sticking up at the crown.</dd>
+            <dt>Outfit</dt><dd>Slate-blue crew-neck tee, olive-khaki shorts to the knee, white crew socks, brown lace-up boots.</dd>
+            <dt>Signature</dt><dd>Red scarf knotted at the throat with two long tails (worn like a cape). Clipboard and pen, and a phone in the call scene.</dd>
+            <dt>Acting range</dt><dd>Focused, startled, panicked yell, beaming grin, wide-eyed awe.</dd>
+          </dl></div>
+        <div><h3>Palette (sampled by eye from the comic)</h3>
+          <div class="swatches">
+            <div class="sw"><i style="background:#5b3a22"></i><span>Hair</span><code>#5b3a22</code></div>
+            <div class="sw"><i style="background:#eab98f"></i><span>Skin</span><code>#eab98f</code></div>
+            <div class="sw"><i style="background:#4f6a7d"></i><span>Tee</span><code>#4f6a7d</code></div>
+            <div class="sw"><i style="background:#c4472e"></i><span>Scarf</span><code>#c4472e</code></div>
+            <div class="sw"><i style="background:#636036"></i><span>Shorts</span><code>#636036</code></div>
+            <div class="sw"><i style="background:#7b4a29"></i><span>Boots</span><code>#7b4a29</code></div>
+          </div></div>
+        <div><h3>Clay translation</h3>
+          <ul class="clay">
+            <li>Head about a third of his height, so he reads as a kid next to the adults.</li>
+            <li>Hair sculpted as a few big swooping clay locks, not a pile of balls.</li>
+            <li>Scarf as a thin rolled sheet with sculpted folds, so it can flap.</li>
+            <li>Sculpted eyelids and brows instead of v1's plain bead eyes.</li>
+          </ul></div>
+        <div class="ask"><h3>Questions for you</h3>
+          <ol>
+            <li>Roughly how old is Noah meant to look?</li>
+            <li>Scarf or a real cape? The comic draws a scarf with long tails.</li>
+            <li>Anything about the real Noah the comic left out?</li>
+          </ol></div>
+      </div>
+    </div>
+  </article>
+
+  <article class="sheet" id="lu">
+    <div class="sheet-head"><h2>Lu</h2><span class="role">The helper who is always, relentlessly helpful</span><span class="no">SHEET 2 / 3</span></div>
+    <div class="sheet-body">
+      <div class="refs">
+        <figure><img src="{{lu-wave}}" alt="Comic panel: Lu waving and smiling in an Olympic rings tee"><figcaption>best reference: glasses, swept-up hair, huge open smile</figcaption></figure>
+        <figure><img src="{{trio-car}}" alt="Comic panel: Lu frowning in the back seat with Noah and the Boss"><figcaption>the deadpan "No!" face, worth keeping as his second expression</figcaption></figure>
+      </div>
+      <div class="spec">
+        <div><h3>What must read</h3>
+          <dl>
+            <dt>Silhouette</dt><dd>Tall and slim, long legs, narrow shoulders. The lightest-built of the three.</dd>
+            <dt>Head</dt><dd>Oval face with a defined jaw, clean-shaven or the faintest shadow. A huge open-mouth smile showing teeth.</dd>
+            <dt>Hair</dt><dd>Black, short at the sides, longer on top and swept up and back, a little messy.</dd>
+            <dt>Glasses</dt><dd>Thin wire frames in amber-brown, softly rounded rectangles.</dd>
+            <dt>Outfit</dt><dd>Cream tee with the Olympic rings on the chest (blue, black, red over yellow, green), black slim trousers, light grey sneakers.</dd>
+            <dt>Acting range</dt><dd>Beaming wave, determined chase, flat grumpy "No!", laughing at the BBQ.</dd>
+          </dl></div>
+        <div><h3>Palette (sampled by eye from the comic)</h3>
+          <div class="swatches">
+            <div class="sw"><i style="background:#1f1b19"></i><span>Hair</span><code>#1f1b19</code></div>
+            <div class="sw"><i style="background:#e9b48a"></i><span>Skin</span><code>#e9b48a</code></div>
+            <div class="sw"><i style="background:#f0e9d8"></i><span>Tee</span><code>#f0e9d8</code></div>
+            <div class="sw"><i style="background:#8a6a3e"></i><span>Frames</span><code>#8a6a3e</code></div>
+            <div class="sw"><i style="background:#25272b"></i><span>Trousers</span><code>#25272b</code></div>
+            <div class="sw"><i style="background:#b9bcbf"></i><span>Sneakers</span><code>#b9bcbf</code></div>
+          </div></div>
+        <div><h3>Clay translation</h3>
+          <ul class="clay">
+            <li>A real neck and shoulders. v1's egg-shaped body goes away.</li>
+            <li>The wide smile carries his character, so the mouth gets the most sculpting.</li>
+            <li>Glasses as thin wire, sitting in front of the face.</li>
+            <li>Rings stay a small raised clay detail on the tee.</li>
+          </ul></div>
+        <div class="ask"><h3>Questions for you</h3>
+          <ol>
+            <li>Stubble, or clean-shaven?</li>
+            <li>Is the hair right, or does the real Lu wear it differently?</li>
+            <li>Keep the Olympic tee as his signature?</li>
+          </ol></div>
+      </div>
+    </div>
+  </article>
+
+  <article class="sheet" id="boss">
+    <div class="sheet-head"><h2>The Boss</h2><span class="role">Laid-back, hot-tub-dwelling, comes to the rescue in the brown sedan</span><span class="no">SHEET 3 / 3</span></div>
+    <div class="sheet-body">
+      <div class="refs">
+        <figure><img src="{{boss-car}}" alt="Comic panel: the Boss leaning out of the car window, grinning in sunglasses and a beanie"><figcaption>best reference: beanie, sunglasses, beard, big grin, green tee</figcaption></figure>
+        <div class="pair">
+          <figure><img src="{{boss-tub}}" alt="Comic panel: the Boss in a hot tub on the phone"><figcaption>hot tub look: shirtless, beanie and shades stay on</figcaption></figure>
+          <figure><img src="{{trio-bbq}}" alt="Comic panel: all three at the Korean BBQ table"><figcaption>all three together: relative sizes</figcaption></figure>
+        </div>
+      </div>
+      <div class="spec">
+        <div><h3>What must read</h3>
+          <dl>
+            <dt>Silhouette</dt><dd>Broad and stocky with thick arms and a solid chest. Wider than Lu, a little shorter.</dd>
+            <dt>Head</dt><dd>Always a black rolled-cuff beanie and black sunglasses. A short full beard, dark brown with grey flecks. A big crinkly grin.</dd>
+            <dt>Outfit</dt><dd>Sage or army-green crew tee. The comic never shows his legs except in the tub (dark swim shorts).</dd>
+            <dt>Signature</dt><dd>Phone to his ear in the tub. Drives the brown four-door sedan.</dd>
+            <dt>Acting range</dt><dd>Big laugh, confident "I'll take care of it", surprised O-mouth in the car.</dd>
+          </dl></div>
+        <div><h3>Palette (sampled by eye from the comic)</h3>
+          <div class="swatches">
+            <div class="sw"><i style="background:#2b2927"></i><span>Beanie</span><code>#2b2927</code></div>
+            <div class="sw"><i style="background:#141414"></i><span>Shades</span><code>#141414</code></div>
+            <div class="sw"><i style="background:#d9a476"></i><span>Skin</span><code>#d9a476</code></div>
+            <div class="sw"><i style="background:#4d3c30"></i><span>Beard</span><code>#4d3c30</code></div>
+            <div class="sw"><i style="background:#566f42"></i><span>Tee</span><code>#566f42</code></div>
+            <div class="sw"><i style="background:#6e4a2c"></i><span>Sedan</span><code>#6e4a2c</code></div>
+          </div></div>
+        <div><h3>Clay translation</h3>
+          <ul class="clay">
+            <li>Shades as one glossy black piece, so his eyes never need animating; the brows and grin do the acting.</li>
+            <li>Beard textured with tool marks, to set it apart from the smooth skin.</li>
+            <li>The beanie's rolled cuff as a separate sculpted band.</li>
+          </ul></div>
+        <div class="ask"><h3>Questions for you</h3>
+          <ol>
+            <li>What does he wear below the waist: jeans, shorts, work pants?</li>
+            <li>How grey is the beard in real life?</li>
+            <li>Does the shirtless hot-tub version need any tattoos or other details?</li>
+          </ol></div>
+      </div>
+    </div>
+  </article>
+
+  <section class="lineup" aria-label="Line-up">
+    <h2>Line-up and scale</h2>
+    <p>In the comic Noah's head reaches about Lu's chest. The Boss is the widest, and Lu is the tallest and thinnest. The clay builds will keep those ratios so the trio reads at a glance even in wide shots.</p>
+    <div class="pair">
+      <figure><img src="{{trio-car}}" alt="Comic panel: Lu, Noah and the Boss in the car"><figcaption>side by side in the car: head sizes</figcaption></figure>
+      <figure><img src="{{trio-bbq}}" alt="Comic panel: the trio at the Korean BBQ"><figcaption>at the table: builds and outfits together</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="next">
+    <h2>What would help most</h2>
+    <p>Short answers to the handwritten questions, and anything about the real people the comic didn't capture. If you still have the separate character images from making the comic, those are the best reference of all, but they are optional.</p>
+  </section>
+</div>
