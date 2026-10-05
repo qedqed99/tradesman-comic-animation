@@ -19,15 +19,16 @@ def smooth_profile(pts, n=6):
     out.append(pts[-1])
     return out
 
-def lathe_bm(profile, seg=32, close=True):
+def lathe_bm(profile, seg=32, close=True, p=2.0):
     """Body of revolution with an elliptical section; profile = [(z, rx, ry[, yoff])], bottom to top."""
     bm = bmesh.new()
     prof = smooth_profile(profile)
     rings = []
-    for p in prof:
-        z, rx, ry = p[0], max(p[1], 1e-4), max(p[2], 1e-4)
-        yo = p[3] if len(p) > 3 else 0
-        rings.append([bm.verts.new((rx * math.cos(a), yo + ry * math.sin(a), z)) for a in (i / seg * 2 * math.pi for i in range(seg))])
+    sq = lambda u: math.copysign(abs(u) ** (2 / p), u)
+    for q in prof:
+        z, rx, ry = q[0], max(q[1], 1e-4), max(q[2], 1e-4)
+        yo = q[3] if len(q) > 3 else 0
+        rings.append([bm.verts.new((rx * sq(math.cos(a)), yo + ry * sq(math.sin(a)), z)) for a in (i / seg * 2 * math.pi for i in range(seg))])
     for r0, r1 in zip(rings, rings[1:]):
         for i in range(seg):
             bm.faces.new((r0[i], r0[(i + 1) % seg], r1[(i + 1) % seg], r1[i]))
@@ -40,8 +41,8 @@ def lathe_bm(profile, seg=32, close=True):
     bm.normal_update()
     return bm
 
-def lathe(name, mat, profile, parent=None, loc=(0, 0, 0), rot=(0, 0, 0), lumpy=0.003, seg=32):
-    return _finish(name, lathe_bm(profile, seg), mat, parent, loc, rot, lumpy)
+def lathe(name, mat, profile, parent=None, loc=(0, 0, 0), rot=(0, 0, 0), lumpy=0.003, seg=32, p=2.0):
+    return _finish(name, lathe_bm(profile, seg, p=p), mat, parent, loc, rot, lumpy)
 
 def lock(name, mat, base, direction, length, r, parent, bend=0.0, lumpy=0.004):
     """Teardrop hair lock / tuft from base along direction."""
@@ -55,11 +56,14 @@ def lock(name, mat, base, direction, length, r, parent, bend=0.0, lumpy=0.004):
     ob.rotation_quaternion = Vector((0, 0, 1)).rotation_difference(Vector(direction).normalized())
     return ob
 
-def head_bm(R, sx=1.0, sy=1.0, sz=1.15, jaw=0.25, chin=0.08, cheek=0.06, back=0.05):
+def head_bm(R, sx=1.0, sy=1.0, sz=1.15, jaw=0.25, chin=0.08, cheek=0.06, back=0.05, p=2.0):
+    """Head: a superellipsoid (p > 2 squares it off toward a rounded rectangle), tapered jaw, chin, cheeks."""
     bm = bmesh.new()
-    bmesh.ops.create_uvsphere(bm, u_segments=48, v_segments=32, radius=1)
+    bmesh.ops.create_uvsphere(bm, u_segments=48, v_segments=40, radius=1)
     for v in bm.verts:
         x, y, z = v.co
+        k = (abs(x) ** p + abs(y) ** p + abs(z) ** p) ** (-1 / p)
+        x, y, z = x * k, y * k, z * k
         if z < 0:
             x *= 1 - jaw * (-z) ** 1.5
             if y < 0: y -= chin * max(0, -z - 0.55) * 2.0
@@ -133,11 +137,11 @@ def beard_mat(color):
     L.new(tc.outputs['Object'], mp.inputs['Vector'])
     wv = N.new('ShaderNodeTexWave'); wv.wave_type = 'BANDS'; wv.bands_direction = 'X'; wv.inputs['Distortion'].default_value = 6; wv.inputs['Detail'].default_value = 3
     L.new(mp.outputs['Vector'], wv.inputs['Vector'])
-    nz = N.new('ShaderNodeTexNoise'); nz.inputs['Scale'].default_value = 40
+    nz = N.new('ShaderNodeTexNoise'); nz.inputs['Scale'].default_value = 130
     L.new(tc.outputs['Object'], nz.inputs['Vector'])
     mix = N.new('ShaderNodeMix'); mix.data_type = 'RGBA'
-    mix.inputs['A'].default_value = (*hexcol(color), 1); mix.inputs['B'].default_value = (*hexcol('#9d958b'), 1)
-    gate = N.new('ShaderNodeMapRange'); gate.inputs['From Min'].default_value = 0.64; gate.inputs['From Max'].default_value = 0.75
+    mix.inputs['A'].default_value = (*hexcol(color), 1); mix.inputs['B'].default_value = (*hexcol('#8a7868'), 1)
+    gate = N.new('ShaderNodeMapRange'); gate.inputs['From Min'].default_value = 0.56; gate.inputs['From Max'].default_value = 0.66
     L.new(nz.outputs['Fac'], gate.inputs['Value']); L.new(gate.outputs[0], mix.inputs['Factor'])
     L.new(mix.outputs['Result'], b.inputs['Base Color'])
     bp = N.new('ShaderNodeBump'); bp.inputs['Strength'].default_value = 0.8; bp.inputs['Distance'].default_value = 0.004
@@ -145,19 +149,19 @@ def beard_mat(color):
     return m
 
 CAST = {
-    'noah': dict(height=1.2, hip=0.5, leg=0.46, legr=0.055, head=0.15, headS=(1.0, 0.98, 1.12), jaw=0.22, chin=0.03, cheek=0.09,
-                 skin='#eab98f', hair='#5b3a22', iris='#6b4423', shirt='#4f6a7d', bottom='#636036', shoes='#7b4a29', socks='#efe9dc',
-                 cape='#c4472e', torso=[(-0.06, 0.135, 0.1), (0.06, 0.14, 0.105), (0.2, 0.135, 0.1), (0.3, 0.15, 0.1), (0.36, 0.13, 0.09), (0.4, 0.05, 0.045)],
-                 shoulder=0.125, sz=0.33, up=0.2, fore=0.18, armr=0.042, hand=0.042, eye=0.032, eyeX=0.058, eyeZ=0.01, nose=(0.018, 0.016, 0.014)),
-    'lu':   dict(height=1.85, hip=0.95, leg=0.88, legr=0.062, head=0.14, headS=(0.9, 0.98, 1.22), jaw=0.32, chin=0.06, cheek=0.03,
-                 skin='#e7b287', hair='#1f1b19', iris='#2a1d14', shirt='#f0e9d8', bottom='#25272b', shoes='#b9bcbf', sole='#f2f2ee',
+    'noah': dict(height=1.2, hip=0.5, leg=0.46, legr=0.055, head=0.15, headS=(0.86, 0.9, 1.36), headP=2.5, jaw=0.12, chin=0.02, cheek=0.05,
+                 skin='#eab98f', hair='#5b3a22', iris='#2f7fd0', shirt='#1f4f9e', bottom='#6a6620', shoes='#7b4a29', socks='#efe9dc',
+                 cape='#e01b1b', torso=[(-0.06, 0.135, 0.1), (0.06, 0.14, 0.105), (0.2, 0.135, 0.1), (0.3, 0.15, 0.1), (0.36, 0.13, 0.09), (0.4, 0.05, 0.045)],
+                 shoulder=0.125, sz=0.33, up=0.2, fore=0.18, armr=0.042, hand=0.042, eye=0.032, eyeX=0.056, eyeZ=0.02, mouthZ=0.34, nose=(0.018, 0.016, 0.014)),
+    'lu':   dict(height=1.85, hip=0.95, leg=0.88, legr=0.062, head=0.14, headS=(0.76, 0.9, 1.5), headP=3.0, jaw=0.05, chin=0.03, cheek=0.0,
+                 skin='#e7b287', hair='#1f1b19', iris='#2a1d14', shirt='#f8f4ea', bottom='#1d1f23', shoes='#b9bcbf', sole='#f2f2ee',
                  frames='#8a6a3e', shadow=True,
                  torso=[(-0.08, 0.17, 0.11), (0.05, 0.17, 0.11), (0.25, 0.165, 0.11), (0.45, 0.2, 0.12), (0.53, 0.18, 0.11), (0.58, 0.06, 0.055)],
-                 shoulder=0.185, sz=0.5, up=0.3, fore=0.28, armr=0.046, hand=0.05, eye=0.026, eyeX=0.052, eyeZ=0.015, eyeSquash=0.8, nose=(0.016, 0.02, 0.026)),
-    'boss': dict(height=1.75, hip=0.86, leg=0.8, legr=0.085, head=0.15, headS=(1.0, 1.0, 1.15), jaw=0.15, chin=0.05, cheek=0.08,
-                 skin='#d9a476', hair='#8a6c52', shirt='#566f42', bottom='#8e9093', shoes='#4a4d52', sole='#d8d6d0', beanie='#2b2927',
-                 shades='#111111', beard='#8a6c52', torso=[(-0.08, 0.24, 0.17), (0.08, 0.26, 0.19), (0.25, 0.25, 0.17), (0.42, 0.26, 0.15), (0.5, 0.22, 0.13), (0.56, 0.07, 0.065)],
-                 shoulder=0.235, sz=0.47, up=0.29, fore=0.27, armr=0.055, hand=0.055, eye=0.03, eyeX=0.056, eyeZ=0.015, nose=(0.026, 0.026, 0.026)),
+                 shoulder=0.185, sz=0.5, up=0.3, fore=0.28, armr=0.046, hand=0.05, eye=0.025, eyeX=0.048, eyeZ=0.035, mouthZ=0.4, eyeSquash=0.8, nose=(0.016, 0.02, 0.026)),
+    'boss': dict(height=1.75, hip=0.86, leg=0.8, legr=0.085, head=0.15, headS=(0.86, 0.95, 1.4), headP=3.2, jaw=0.03, chin=0.03, cheek=0.03,
+                 skin='#d9a476', hair='#8a6c52', shirt='#33702b', bottom='#8a8d92', shoes='#4a4d52', sole='#d8d6d0', beanie='#2b2927',
+                 shades='#0c0c0c', beard='#a39c93', torso=[(-0.08, 0.24, 0.17), (0.08, 0.26, 0.19), (0.25, 0.25, 0.17), (0.42, 0.26, 0.15), (0.5, 0.22, 0.13), (0.56, 0.07, 0.065)],
+                 shoulder=0.235, sz=0.47, up=0.29, fore=0.27, armr=0.055, hand=0.055, eye=0.03, eyeX=0.054, eyeZ=0.04, mouthZ=0.42, nose=(0.026, 0.026, 0.026)),
 }
 
 
@@ -194,8 +198,8 @@ class Clay:
         # ---- torso (shirt), waistband, logo
         self.torso = empty(who + '.torso', self.hips)
         prof = [(z, rx, ry) for z, rx, ry in c['torso']]
-        self.shirtOb = lathe(who + '.shirt', shirt, prof, self.torso, lumpy=0.004)
-        lathe(who + '.waist', bottom, [(-0.12, prof[0][1] * 1.02, prof[0][2] * 1.03), (-0.04, prof[0][1] * 1.03, prof[0][2] * 1.04), (0.0, prof[0][1] * 1.02, prof[0][2] * 1.03)], self.torso)
+        self.shirtOb = lathe(who + '.shirt', shirt, prof, self.torso, lumpy=0.004, p=2.6)
+        lathe(who + '.waist', bottom, [(prof[0][0] - 0.07, prof[0][1] * 0.97, prof[0][2] * 0.97), (prof[0][0] - 0.03, prof[0][1] * 0.98, prof[0][2] * 0.98), (prof[0][0] + 0.01, prof[0][1] * 0.96, prof[0][2] * 0.96)], self.torso, p=2.6)
         if who == 'boss':
             band = torus(who + '.band', clay('#7f8184', bump=0.6), prof[0][1] * 1.03, 0.02, self.torso, (0, 0, -0.07), (math.pi / 2, 0, 0))
             band.scale = (1, 1, prof[0][2] / prof[0][1])
@@ -221,8 +225,8 @@ class Clay:
                 x0 = -0.015 + k * 0.015
                 snake(f'{who}.steam{k}', clay('#f4f4f0', bump=0.05), [(x0, 0, 0.022), (x0 + 0.005, 0, 0.03), (x0 - 0.003, 0, 0.038), (x0 + 0.004, 0, 0.046)], 0.0022, g, (0, -0.003, 0))
         if who == 'boss':  # the old green tee, shredding: holes with frayed rims, skin showing
-            for i, (x, z, back, r) in enumerate([(0.12, 0.33, False, 0.032), (-0.1, 0.15, False, 0.024), (0.06, 0.04, False, 0.018),
-                                                 (-0.16, 0.38, False, 0.016), (0.1, 0.25, True, 0.03), (-0.06, 0.4, True, 0.02)]):
+            for i, (x, z, back, r) in enumerate([(0.13, 0.11, False, 0.028), (0.18, 0.05, False, 0.017), (0.09, 0.03, False, 0.014),
+                                                 (0.17, 0.17, False, 0.012), (0.07, 0.12, False, 0.009), (0.12, 0.2, False, 0.008)]):
                 p, n = on_shirt(x, z, back)
                 if p is None: continue
                 d = blob(f'{who}.hole{i}', clay('#a87a55', sss=0.1, bump=0.3), (r, r * 0.8, 0.004), (0, 0, 0), self.torso, loc=p + n * 0.001, lumpy=0); aim(d, n)
@@ -259,13 +263,19 @@ class Clay:
         lathe(who + '.neckb', skin, [(-0.04, 0.045 if who != 'boss' else 0.06, 0.045), (0.06, 0.042 if who != 'boss' else 0.058, 0.042)], self.neck)
         self.head = empty(who + '.head', self.neck, (0, 0, 0.05))
         hc = Vector((0, 0, R * S[2] * 0.95)); self.hc = hc; self.R = R
-        bm = head_bm(R, *S, jaw=c['jaw'], chin=c['chin'], cheek=c['cheek'])
-        hbvh = BVHTree.FromBMesh(bm)
+        self.hp = dict(jaw=c['jaw'], chin=c['chin'], cheek=c['cheek'], p=c.get('headP', 2.0))
+        bm = head_bm(R, *S, **self.hp)
+        hbvh = BVHTree.FromBMesh(bm); self.hbvh = hbvh
         self.skull = _finish(who + '.skull', bm, skin, self.head, hc, (0, 0, 0), 0.002)
         def surf(x, z):
             hit = hbvh.ray_cast(Vector((x, -5, z)), Vector((0, 1, 0)))
             return (hit[0] + hc, hit[1]) if hit[0] else (None, None)
         self.surf = surf
+        def scalp_(th, ph, k=1.0):
+            d = Vector((math.sin(ph) * math.sin(th), math.sin(ph) * math.cos(th), math.cos(ph)))
+            hit = hbvh.ray_cast(Vector((0, 0, 0)), d)
+            return hc + d * (hit[3] if hit[0] else R) * k
+        self.scalp = scalp_
         if c.get('shadow'):  # Lu's five o'clock shadow: the skin greys a little below the nose
             self.skull.data.materials[0] = shadow_skin(c['skin'], R, S)
         # nose, ears
@@ -303,7 +313,7 @@ class Clay:
                 for ch in b.children: ch.hide_render = True
         self.er = er
         # mouth
-        mz = -R * S[2] * 0.48
+        mz = -R * S[2] * c.get('mouthZ', 0.48)
         p, n = surf(0, mz)
         self.mouthP = empty(who + '.mouthP', self.head, p + Vector((0, 0.004, 0)))
         self.mouthOpen = blob(who + '.mouth', clay('#5a1f1c', rough=0.5, bump=0.05, prints=0), (R * 0.26, R * 0.1, R * 0.17), (0, 0, 0), self.mouthP, lumpy=0)
@@ -328,7 +338,8 @@ class Clay:
         """Shaggy brown hair: a cap plus tapered locks flowing from the crown; the fringe falls to the brows."""
         R, hc, S = self.R, self.hc, self.c['headS']
         hm = clay(self.c['hair'], rough=0.6, bump=0.55, prints=1.2)
-        blob('noah.cap', hm, (R * S[0] * 1.0, R * S[1] * 1.0, R * S[2] * 0.7), (0, 0, 0), self.head, loc=hc + Vector((0, R * 0.05, R * 0.3)), lumpy=0.004)
+        top = R * S[2]
+        self._shell('noah.cap', hm, lambda x, y, z: z > (0.5 * top if y < -0.45 * R * S[1] else -0.05 * top if y < 0.3 * R else -0.35 * top), 0.002, 0.014, 0.004)
         crown = (0.0, 0.12)
         n = 0
         for row, (ph1, k) in enumerate([(0.6, 1.08), (0.75, 1.06), (0.9, 1.03)]):
@@ -341,14 +352,14 @@ class Clay:
                 for t in (0, 0.33, 0.66, 1.0):
                     ph = crown[1] * math.pi + (end_ph - crown[1] * math.pi) * t
                     kk = k + 0.06 * math.sin(t * math.pi) + (0.05 * t if not face else 0.0)
-                    pts.append(scalp(hc, R, S, th + rnd.uniform(-0.05, 0.05) * t, ph, kk))
+                    pts.append(self.scalp(th + rnd.uniform(-0.05, 0.05) * t, ph, kk))
                 # tips flick out a little
                 tip = pts[-1] + (pts[-1] - hc).normalized() * R * 0.08 + Vector((0, 0, -R * 0.05))
                 pts.append(tip)
                 strand(f'noah.lock{n}', hm, pts, R * rnd.uniform(0.17, 0.21), self.head)
                 n += 1
         for i, (th, l) in enumerate([(0.3, 0.45), (-0.4, 0.38), (0.05, 0.5)]):  # a few strands sticking up at the crown
-            b0 = scalp(hc, R, S, th, 0.18 * math.pi, 1.0)
+            b0 = self.scalp(th, 0.18 * math.pi, 1.0)
             strand(f'noah.cowlick{i}', hm, [b0, b0 + Vector((math.sin(th) * 0.3, 0.4, 1)).normalized() * R * l * 0.5,
                                              b0 + Vector((math.sin(th) * 0.6, 0.9, 0.9)).normalized() * R * l], R * 0.08, self.head)
 
@@ -356,15 +367,17 @@ class Clay:
         """Black hair, short at the sides, the top swept up and back from the hairline."""
         R, hc, S = self.R, self.hc, self.c['headS']
         hm = clay(self.c['hair'], rough=0.5, bump=0.5, prints=1.0)
-        blob('lu.cap', hm, (R * S[0] * 1.02, R * S[1] * 1.02, R * S[2] * 0.72), (0, 0, 0), self.head, loc=hc + Vector((0, R * 0.04, R * 0.33)), lumpy=0.003)
-        n = 0
         top = R * S[2]
+        self._shell('lu.cap', hm, lambda x, y, z: z > (0.66 * top if y < -0.45 * R * S[1] else 0.12 * top if y < 0.3 * R else -0.15 * top), 0.002, 0.01, 0.003)
+        n = 0
         for row in range(3):  # quiff: up from the hairline, then back over the crown
             count = 7
             for i in range(count):
                 x = (i / (count - 1) - 0.5) * 1.3 * R * S[0] * (1 - row * 0.15)
-                y0 = -R * S[1] * (0.62 - row * 0.25)
-                z0 = top * (0.58 + row * 0.2)
+                z0 = top * (0.68 + row * 0.13)
+                sp, _ = self.surf(x, z0)
+                if sp is None: continue
+                y0 = sp.y + R * 0.02 + row * R * 0.18
                 lift = R * (0.42 - row * 0.1) * (1 - abs(x) / (R * 1.4))
                 pts = [hc + Vector((x, y0, z0)),
                        hc + Vector((x * 1.05, y0 - R * 0.05, z0 + lift * 0.8)),
@@ -375,28 +388,49 @@ class Clay:
         for i in range(18):  # short sides and back
             th = i / 18 * 2 * math.pi
             if math.cos(th) < -0.6: continue
-            pts = [scalp(hc, R, S, th, (0.3 + t * (0.2 + 0.14 * max(0.0, math.cos(th)))) * math.pi, 1.03) for t in (0, 0.5, 1.0)]
+            pts = [self.scalp(th, (0.25 + t * (0.17 + 0.14 * max(0.0, math.cos(th)))) * math.pi, 1.03) for t in (0, 0.5, 1.0)]
             strand(f'lu.side{i}', hm, pts, R * 0.11, self.head, taper=(1.0, 0.8, 0.3)); n += 1
 
     def _boss_head(self, rnd):
         R, hc, S, c = self.R, self.hc, self.c['headS'], self.c
         bean = clay(c['beanie'], rough=0.85, bump=0.9, prints=0.6)
-        lathe('boss.beanie', bean, [(R * 0.3, R * S[0] * 1.07, R * S[1] * 1.07), (R * 0.55, R * S[0] * 1.06, R * S[1] * 1.06), (R * 0.85, R * 0.8, R * 0.8), (R * 1.18, R * 0.25, R * 0.25), (R * 1.24, 0.004, 0.004)],
-              self.head, loc=hc + Vector((0, 0.008, 0)), lumpy=0.004)
-        cuff = torus('boss.cuff', bean, R * S[0] * 1.1, 0.028, self.head, hc + Vector((0, 0.006, R * 0.38)), (math.pi / 2, 0, 0), lumpy=0.003)
-        cuff.scale = (1, 1, S[1] / S[0])
-        # sunglasses: two glossy black lenses, bridge, arms
-        sm = clay(c['shades'], rough=0.08, bump=0.0, prints=0)
+        top = R * S[2]
+        self._shell('boss.beanie', bean, lambda x, y, z: z > 0.36 * top, 0.006, 0.02, 0.003)
+        self._shell('boss.cuff', bean, lambda x, y, z: 0.3 * top < z < 0.52 * top, 0.022, 0.016, 0.002)
+        # sunglasses: one glossy wraparound wayfarer piece, flat top, two lenses, notch at the bridge
+        sm = clay(c['shades'], rough=0.06, bump=0.0, prints=0)
+        zc = c['eyeZ']
+        def hug(a, z, out):
+            d = Vector((math.sin(a), -math.cos(a), 0))
+            hit = self.hbvh.ray_cast(Vector((0, 0, z)), d)
+            return Vector((0, 0, z)) + d * ((hit[3] if hit[0] else R) + out) + hc
+        bmg = bmesh.new(); cols_, rows_ = 48, 6; A = 1.2
+        def lo(a):
+            aa = abs(a)
+            if aa < 0.1: return zc + 0.012
+            if aa < 0.85:
+                t = (aa - 0.1) / 0.75
+                return zc + 0.012 - 0.05 * math.sin(math.pi * min(1, t)) ** 0.55 - 0.006 * (1 - t)
+            return zc + 0.032
+        grid = []
+        for i in range(cols_ + 1):
+            a = -A + 2 * A * i / cols_
+            hi = zc + 0.044 + 0.004 * abs(a)
+            grid.append([bmg.verts.new(hug(a, lo(a) + (hi - lo(a)) * j / rows_, 0.014 + 0.004 * abs(a))) for j in range(rows_ + 1)])
+        for i in range(cols_):
+            for j in range(rows_):
+                bmg.faces.new((grid[i][j], grid[i + 1][j], grid[i + 1][j + 1], grid[i][j + 1]))
+        bmg.normal_update()
+        sh_ = _finish('boss.shades', bmg, sm, self.head, (0, 0, 0), (0, 0, 0), 0)
+        so = sh_.modifiers.new('thick', 'SOLIDIFY'); so.thickness = 0.007; so.offset = 0
+        bv = sh_.modifiers.new('round', 'BEVEL'); bv.width = 0.002; bv.segments = 2
         for side, sx in (('L', 1), ('R', -1)):
-            p, n = self.surf(sx * c['eyeX'], c['eyeZ'])
-            l = blob(f'boss.lens{side}', sm, (0.047, 0.013, 0.034), (0, 0, 0), self.head, loc=p + Vector((sx * 0.004, -0.008, 0)), rot=(0, 0, sx * -0.18), lumpy=0)
-            blob(f'boss.arm{side}', sm, (0.004, R * 0.55, 0.005), (0, 0, 0), self.head, loc=(sx * R * S[0] * 0.98, -R * 0.4, p.z + 0.006))
-        p, n = self.surf(0, c['eyeZ'] + 0.004)
-        box('boss.bridge', sm, (0.03, 0.008, 0.008), (0, 0, 0), self.head, loc=p + Vector((0, -0.012, 0)), bevel=0.003)
+            ep = hug(sx * A, zc + 0.04, 0.012)
+            blob(f'boss.arm{side}', sm, (0.004, R * 0.5, 0.006), (0, 0, 0), self.head, loc=(ep.x, ep.y + R * 0.45, ep.z))
         # beard: a shell cut from the head shape, pushed out and textured like tooled clay
         bm_ = beard_mat(c['beard'])
         mz = self.mouthP.location.z - hc.z
-        hb = head_bm(R, *S, jaw=c['jaw'], chin=c['chin'], cheek=c['cheek'])
+        hb = head_bm(R, *S, **self.hp)
         def keep(v):
             x, y, z = v
             if y > 0.3 * R: return False
@@ -419,6 +453,17 @@ class Clay:
             if hit is None: continue
             p, n = hit
             blob(f'boss.stache{k}', bm_, (0.016, 0.012, 0.009), (0, 0, 0), self.head, loc=p + n * 0.008, rot=(0, (k / 9 - 0.5) * 0.8, 0), lumpy=0)
+
+    def _shell(self, name, mat, keep, push=0.004, thick=0.012, lumpy=0.0):
+        """A layer sculpted over part of the head (hair cap, beanie, beard): the head shape cut by keep(x, y, z)."""
+        hb = head_bm(self.R, *self.c['headS'], **self.hp)
+        bmesh.ops.delete(hb, geom=[f for f in hb.faces if not keep(*f.calc_center_median())], context='FACES')
+        for v in hb.verts:
+            v.co += v.normal * push
+        ob = _finish(name, hb, mat, self.head, self.hc, (0, 0, 0), lumpy)
+        so = ob.modifiers.new('thick', 'SOLIDIFY'); so.thickness = thick; so.offset = 1
+        ob.modifiers.new('sub', 'SUBSURF').levels = 1
+        return ob
 
     def _skull_hit(self, x, z):
         p, n = self.surf(x, z)
