@@ -179,11 +179,11 @@ CAST = {
 
 
 class Clay:
-    def __init__(self, who, parent=None):
+    def __init__(self, who, parent=None, shirtless=False):
         c = CAST[who]; self.who = who; self.c = c
         rnd = random.Random(who)
         skin = clay(c['skin'], sss=0.12, bump=0.22)
-        shirt = clay(c['shirt'], bump=0.35)
+        shirt = skin if shirtless else clay(c['shirt'], bump=0.35)
         bottom = clay(c['bottom'], bump=0.4)
         self.root = empty(who, parent)
         self.hips = empty(who + '.hips', self.root, (0, 0, c['hip']))
@@ -213,7 +213,7 @@ class Clay:
         prof = [(z, rx, ry) for z, rx, ry in c['torso']]
         self.shirtOb = lathe(who + '.shirt', shirt, prof, self.torso, lumpy=0.004, p=2.6)
         lathe(who + '.waist', bottom, [(prof[0][0] - 0.07, prof[0][1] * 0.97, prof[0][2] * 0.97), (prof[0][0] - 0.03, prof[0][1] * 0.98, prof[0][2] * 0.98), (prof[0][0] + 0.01, prof[0][1] * 0.96, prof[0][2] * 0.96)], self.torso, p=2.6)
-        if who == 'boss':
+        if who == 'boss' and not shirtless:
             band = torus(who + '.band', clay('#7f8184', bump=0.6), prof[0][1] * 1.03, 0.02, self.torso, (0, 0, -0.07), (math.pi / 2, 0, 0))
             band.scale = (1, 1, prof[0][2] / prof[0][1])
         bvh = BVHTree.FromObject(self.shirtOb, bpy.context.evaluated_depsgraph_get())
@@ -226,7 +226,7 @@ class Clay:
                 p, n = on_shirt(x, z)
                 ob = torus(f'{who}.ring{i}', clay(cols[i], bump=0.05), 0.02, 0.0045, self.torso, p + n * 0.003)
                 ob.rotation_mode = 'QUATERNION'; ob.rotation_quaternion = Vector((0, -1, 0)).rotation_difference(n)
-        if who == 'noah':  # little hot tub with steam: Noah's hot tub business
+        if who == 'noah' and not shirtless:  # little hot tub with steam: Noah's hot tub business
             p, n = on_shirt(0.045, 0.27)
             g = empty(who + '.logo', self.torso, p + n * 0.004)
             g.rotation_mode = 'QUATERNION'; g.rotation_quaternion = Vector((0, -1, 0)).rotation_difference(n)
@@ -237,7 +237,7 @@ class Clay:
             for k in range(3):
                 x0 = -0.015 + k * 0.015
                 snake(f'{who}.steam{k}', clay('#f4f4f0', bump=0.05), [(x0, 0, 0.022), (x0 + 0.005, 0, 0.03), (x0 - 0.003, 0, 0.038), (x0 + 0.004, 0, 0.046)], 0.0022, g, (0, -0.003, 0))
-        if who == 'boss':  # the old green tee, shredding: holes with frayed rims, skin showing
+        if who == 'boss' and not shirtless:  # the old green tee, shredding: holes with frayed rims, skin showing
             for i, (x, z, back, r) in enumerate([(0.13, 0.11, False, 0.028), (0.18, 0.05, False, 0.017), (0.09, 0.03, False, 0.014),
                                                  (0.17, 0.17, False, 0.012), (0.07, 0.12, False, 0.009), (0.12, 0.2, False, 0.008)]):
                 p, n = on_shirt(x, z, back)

@@ -15,9 +15,9 @@ ENV_RATE = 24  # envelope samples per second
 # Who sounds like what. voice = Kokoro preset, speed = talking speed, pitch = shift factor
 # (1.0 = as is; above 1 raises the voice, which is how Noah gets a kid-like voice).
 CAST = {
-    'noah': dict(voice='af_heart', speed=1.05, pitch=1.18),
-    'lu':   dict(voice='am_puck', speed=1.0, pitch=1.0),
-    'boss': dict(voice='am_onyx', speed=0.95, pitch=0.97),
+    'noah': dict(voice='af_bella', speed=1.05, pitch=1.18),
+    'lu':   dict(voice='am_eric', speed=1.0, pitch=1.0),
+    'boss': dict(voice='am_adam', speed=0.95, pitch=0.97),
 }
 AUDITION = {
     'noah': ['af_heart', 'af_sky', 'af_nicole', 'am_liam', 'af_bella'],
