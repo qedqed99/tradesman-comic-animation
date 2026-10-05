@@ -3,6 +3,7 @@
 import bpy, math
 from mathutils import Vector
 from lib import Puppet, clay, blob, box, cone, snake, empty
+from cast import Clay
 import sets as S
 
 def ease_out(x): return 1 - (1 - x) ** 3
@@ -81,12 +82,14 @@ def shot(name):
 
 @shot('checklist')
 class Checklist:
+    """Scene 1: Noah ticks his work order in the empty lot... then hears something. (clay cast v2)"""
     def build(self, ctx):
         S.parking_lot()
         S.lights()
-        self.noah = Puppet('noah')
-        self.board, self.checks = clipboard(self.noah.torso, (0.03, -0.3, 0.2), (math.radians(-38), 0, math.radians(-4)))
-        self.pen = cone('pen', clay('#2f5fa8', rough=0.3, bump=0.05), 0.012, 0.004, 0.15, (0, 0, -0.07), self.noah.hand['R'], (0, -0.03, 0))
+        self.noah = Clay('noah')
+        self.board, self.checks = clipboard(self.noah.torso, (0.02, -0.21, 0.2), (math.radians(-38), 0, math.radians(-4)))
+        self.board.scale = (0.85, 0.85, 0.85)
+        self.pen = cone('pen', clay('#2f5fa8', rough=0.3, bump=0.05), 0.009, 0.003, 0.12, (0, 0, -0.06), self.noah.hand['R'], (0, -0.025, 0))
         self.pen.rotation_euler = (math.radians(-60), 0, 0)
         self.cam = camera(42, 3.2)
         self.ctx = ctx
@@ -99,9 +102,9 @@ class Checklist:
         snap = seg(t, self.huh, self.huh + 0.35, back_out)
         startled = t >= self.huh
         # camera: slow push in on the medium shot, then a snap zoom onto his face
-        a = (0.55 - t * 0.02, -2.75 + t * 0.06, 1.05)
-        b = (0.12, -1.4, 1.12)
-        aim(self.cam, vlerp(a, b, snap), vlerp((0.05, 0, 0.78), (0.02, 0, 1.06), snap))
+        a = (0.5 - t * 0.02, -2.5 + t * 0.06, 1.0)
+        b = (0.12, -1.15, 1.16)
+        aim(self.cam, vlerp(a, b, snap), vlerp((0.05, 0, 0.84), (0.02, 0, 1.12), snap))
         rows = [1.0] + [seg(t, x - 0.25, x, ease_out) for x in self.ticks] + [0.0]
         for c, k in zip(self.checks, rows):
             c.hide_render = k <= 0.01
@@ -111,20 +114,19 @@ class Checklist:
         scrib = math.sin(t * 40) * 4 if writing else 0
         line = 1 if startled else 0
         talk = self.ctx.talk(t, line)
-        hop = math.sin(seg(t, self.huh, self.huh + 0.3) * math.pi) * 0.06
-        self.board.location = (0.03, -0.3, 0.2 - 0.12 * snap)
+        hop = math.sin(seg(t, self.huh, self.huh + 0.3) * math.pi) * 0.05
+        self.board.location = (0.02, -0.21, 0.2 - 0.1 * snap)
         self.board.rotation_euler = (math.radians(-38 + 25 * snap), 0, math.radians(-4))
-        z = 0.1 * (row if not startled else 0)
         n.pose(
-            bob=hop, lean=(0, 0) if startled else (-6, 0), jitter=1, seed=frame,
-            arms={'L': {'fwd': 40 - 15 * snap, 'out': -18, 'bend': 55 - 15 * snap, 'twist': 10},
-                  'R': ({'fwd': lerp(50, 30, snap), 'out': lerp(-20, 25, snap), 'bend': lerp(70, 40, snap)} if startled else
-                        {'fwd': 50 + scrib * 0.6, 'out': -20 + scrib, 'bend': 66 - row * 4})},
-            head=({'tilt': -4, 'turn': 14 * snap, 'nod': -6, 'lookX': 0.85, 'lookY': -0.1, 'eyes': 'wide', 'raise': 1.4,
+            bob=hop, lean=(0, 0) if startled else (-5, 0), jitter=1, seed=frame,
+            arms={'L': {'fwd': 40 - 15 * snap, 'out': -16, 'bend': 60 - 15 * snap, 'twist': 10},
+                  'R': ({'fwd': lerp(50, 25, snap), 'out': lerp(-20, 20, snap), 'bend': lerp(70, 35, snap)} if startled else
+                        {'fwd': 52 + scrib * 0.6, 'out': -22 + scrib, 'bend': 68 - row * 4})},
+            head=({'tilt': -4, 'turn': 14 * snap, 'nod': -4, 'lookX': 0.8, 'lookY': -0.1, 'eyes': 'wide', 'raise': 1.4,
                    'mouth': 'o', 'open': max(talk, 0.45)} if startled else
-                  {'tilt': 5, 'nod': 24, 'turn': 4, 'lookX': 0.1, 'lookY': 1.0, 'raise': -0.3, 'blink': blink(t, 2) * 0.6,
-                   'mouth': 'talk' if talk > 0.05 else 'smile', 'open': talk * 0.6}),
-            cape=0.05 + (0.3 * hop / 0.06 if startled else 0),
+                  {'tilt': 5, 'nod': 18, 'turn': 4, 'lookX': 0.1, 'lookY': 0.9, 'eyes': 'tired', 'raise': -0.3, 'blink': blink(t, 2) * 0.6,
+                   'mouth': 'talk' if talk > 0.05 else 'smile', 'open': talk * 0.7}),
+            cape=0.05 + (0.3 * hop / 0.05 if startled else 0),
         )
 
 

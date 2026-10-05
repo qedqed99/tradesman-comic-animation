@@ -148,6 +148,19 @@ def beard_mat(color):
     L.new(wv.outputs['Fac'], bp.inputs['Height']); L.new(bp.outputs['Normal'], b.inputs['Normal'])
     return m
 
+def frame_ring(name, mat, w, h, r, parent, loc, p=4.0, n=64):
+    """Closed rounded-square wire (glasses frame): a superellipse path with a round section."""
+    cu = bpy.data.curves.new(name, 'CURVE'); cu.dimensions = '3D'
+    cu.bevel_depth = r; cu.bevel_resolution = 3
+    sp = cu.splines.new('POLY'); sp.points.add(n - 1); sp.use_cyclic_u = True
+    for i, pt in enumerate(sp.points):
+        a = i / n * 2 * math.pi
+        c, s_ = math.cos(a), math.sin(a)
+        pt.co = (w / 2 * math.copysign(abs(c) ** (2 / p), c), 0, h / 2 * math.copysign(abs(s_) ** (2 / p), s_), 1)
+    ob = bpy.data.objects.new(name, cu); bpy.context.scene.collection.objects.link(ob)
+    cu.materials.append(mat); ob.parent = parent; ob.location = loc
+    return ob
+
 CAST = {
     'noah': dict(height=1.2, hip=0.5, leg=0.46, legr=0.055, head=0.15, headS=(0.86, 0.9, 1.36), headP=2.5, jaw=0.12, chin=0.02, cheek=0.05,
                  skin='#eab98f', hair='#5b3a22', iris='#2f7fd0', shirt='#1f4f9e', bottom='#6a6620', shoes='#7b4a29', socks='#efe9dc',
@@ -328,9 +341,8 @@ class Clay:
             gm = clay(c['frames'], rough=0.3, bump=0.03, prints=0)
             for side, sx in (('L', 1), ('R', -1)):
                 ep = self.eye[side].location
-                fr = torus(f'{who}.lens{side}', gm, er * 1.6, 0.0035, self.head, (ep.x, -R * 1.0 - 0.012, ep.z), (0, 0, 0))
-                fr.scale = (1.12, 1, 0.82)
-                blob(f'{who}.temple{side}', gm, (0.0035, R * 0.55, 0.0035), (0, 0, 0), self.head, loc=(sx * (abs(ep.x) + er * 1.75), -R * 0.5, ep.z + 0.005))
+                frame_ring(f'{who}.lens{side}', gm, er * 3.3, er * 2.5, 0.0035, self.head, (ep.x, -R * 1.0 - 0.012, ep.z))
+                blob(f'{who}.temple{side}', gm, (0.0035, R * 0.55, 0.0035), (0, 0, 0), self.head, loc=(sx * (abs(ep.x) + er * 1.65), -R * 0.5, ep.z + er * 0.9))
             snake(who + '.bridge', gm, [(-0.02, 0, 0), (0, 0, 0.006), (0.02, 0, 0)], 0.0035, self.head, (0, -R * 1.0 - 0.012, self.eye['L'].location.z + 0.004))
         if who == 'noah': self._cape()
 
@@ -395,8 +407,15 @@ class Clay:
         R, hc, S, c = self.R, self.hc, self.c['headS'], self.c
         bean = clay(c['beanie'], rough=0.85, bump=0.9, prints=0.6)
         top = R * S[2]
-        self._shell('boss.beanie', bean, lambda x, y, z: z > 0.36 * top, 0.006, 0.02, 0.003)
-        self._shell('boss.cuff', bean, lambda x, y, z: 0.3 * top < z < 0.52 * top, 0.022, 0.016, 0.002)
+        self._shell('boss.beanie', bean, lambda x, y, z: z > 0.4 * top, 0.006, 0.02, 0.0)
+        # folded cuff: a smooth, even band following the head's cross-section (no notches)
+        hp = self.hp['p']
+        def ring(zf, out):
+            f = (1 - abs(zf * top / (R * S[2])) ** hp) ** (1 / hp)
+            return (zf * top, R * S[0] * f + out, R * S[1] * f * 0.985 + out)
+        z0, z1 = 0.3, 0.52
+        cuff_prof = [ring(z0, 0.02), ring(z0 + 0.03, 0.036), ring((z0 + z1) / 2, 0.04), ring(z1 - 0.03, 0.036), ring(z1, 0.02)]
+        lathe('boss.cuff', bean, cuff_prof, self.head, loc=hc + Vector((0, -R * S[1] * 0.012, 0)), lumpy=0.0, seg=64, p=hp)
         # sunglasses: one glossy wraparound wayfarer piece, flat top, two lenses, notch at the bridge
         sm = clay(c['shades'], rough=0.06, bump=0.0, prints=0)
         zc = c['eyeZ']
@@ -517,7 +536,7 @@ class Clay:
         lids = lids + (88 - lids) * h.get('blink', 0)
         for s in 'LR':
             if s in self.eyeRot:
-                self.eyeRot[s].rotation_euler = (r(-ly * 22), 0, r(lx * 28))
+                self.eyeRot[s].rotation_euler = (r(ly * 22), 0, r(lx * 28))
                 self.lid[s].rotation_euler = (r(lids), 0, 0)
             b = self.brow[s]; sgn = 1 if s == 'L' else -1
             b.rotation_euler = (0, r(-sgn * h.get('browTilt', 0)), 0)
