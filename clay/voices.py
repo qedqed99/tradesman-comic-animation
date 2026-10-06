@@ -26,8 +26,9 @@ AUDITION = {
 }
 
 def timeline():
-    js = "global.window={};require(process.argv[1]);process.stdout.write(JSON.stringify(window.TIMELINE))"
-    return json.loads(subprocess.check_output(['node', '-e', js, os.path.join(ROOT, 'timeline.js')], cwd='/tmp'))
+    # timeline.js with the clay-only changes from clay/overrides.js applied
+    js = "global.window={};require(process.argv[1]);require(process.argv[2]);process.stdout.write(JSON.stringify(window.CLAY.apply(window.TIMELINE)))"
+    return json.loads(subprocess.check_output(['node', '-e', js, os.path.join(ROOT, 'timeline.js'), os.path.join(ROOT, 'clay', 'overrides.js')], cwd='/tmp'))
 
 def parse(text):
     """Same rules as TS.speech.parse in src/fx.js: segments split by {n} pauses, with start times."""
@@ -77,20 +78,46 @@ def envelope(a):
     e = e / (e.max() or 1)
     return [round(float(x), 3) for x in np.clip((e - 0.08) / 0.6, 0, 1)]
 
+def glide(a, end):
+    """Pitch glide like a tape speeding up: the line ends `end` times higher (and a little shorter)."""
+    n = len(a)
+    rate = np.linspace(1.0, end, n)
+    pos = np.cumsum(rate); pos = pos[pos < n - 1]
+    return np.interp(pos, np.arange(n), a).astype(np.float32)
+
+def scream(a):
+    """Turn a spoken 'Aaaah' into a sharp scream: stretched, pitched up, rising, overdriven."""
+    with tempfile.TemporaryDirectory() as d:
+        sf.write(d + '/a.wav', a, SR)
+        subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', d + '/a.wav', '-af',
+                        'rubberband=tempo=0.45:pitch=1.3,highpass=f=350,volume=2.5', d + '/b.wav'], check=True)
+        b, _ = sf.read(d + '/b.wav', dtype='float32')
+    b = glide(b, 1.25)
+    env = np.convolve(np.abs(b), np.ones(1200) / 1200, 'same')   # even out the level so it holds like a scream
+    b = b / np.maximum(env, 0.02) * 0.25
+    t = np.arange(len(b)) / SR
+    b = b * (1 + 0.25 * np.sin(2 * np.pi * 7 * t))         # a shaky edge
+    b = np.tanh(b * 4.0) / np.tanh(4.0)                     # overdrive: harsh like the tyre screech
+    fade = np.minimum(1, np.minimum(t / 0.03, (t[-1] - t) / 0.25))
+    return (b * fade * 0.5).astype(np.float32)
+
 def voice_scene(cfg):
     track = np.zeros(int(cfg['duration'] * SR) + SR, dtype=np.float32)
     meta = {}
     for idx, d in enumerate(cfg.get('dialogue', [])):
         whos = d['who'] if isinstance(d['who'], list) else [d['who']]
         line = np.zeros(0, dtype=np.float32)
-        for start, text in parse(d['text']):
-            s = speakable(text)
+        segs = [(0.08, d['say'])] if d.get('say') else parse(d['text'])
+        for start, text in segs:
+            s = speakable(text) if not d.get('say') else text
             if not s: continue
             mix = None
             for w in whos:
                 a = say(s, w)
                 mix = a if mix is None else np.pad(mix, (0, max(0, len(a) - len(mix)))) + np.pad(a, (0, max(0, len(mix) - len(a))))
             mix = mix / max(1, len(whos) ** 0.5)
+            if d.get('fx') == 'scream': mix = scream(mix)
+            if d.get('rise'): mix = glide(mix, d['rise'])
             at = int(start * SR)
             if len(line) < at: line = np.pad(line, (0, at - len(line)))
             line = np.concatenate([line[:at], mix]) if len(line) <= at else np.concatenate([line, mix])

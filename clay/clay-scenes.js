@@ -37,10 +37,8 @@
       },
     };
   }
-  // clay overrides of timeline values (e.g. bubble positions that suit the 3D framing)
+  // clay-only changes to timeline.js (clay/overrides.js), and only the scenes that have frames
   const keep = new Set(Object.keys(window.CLAY.scenes));
-  window.TIMELINE.scenes = window.TIMELINE.scenes.filter(s => keep.has(s.id)).map(s => {
-    const o = (window.CLAY.overrides || {})[s.id] || {};
-    return { ...s, dialogue: (s.dialogue || []).map((d, i) => ({ ...d, ...(o.dialogue || {})[i] })) };
-  });
+  const tl = window.CLAY.apply(window.TIMELINE);
+  window.TIMELINE.scenes = tl.scenes.filter(s => keep.has(s.id));
 })(window.TS);

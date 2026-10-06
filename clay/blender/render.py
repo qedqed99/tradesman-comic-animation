@@ -19,8 +19,9 @@ ap.add_argument('--from', dest='frm', type=int, default=0)
 A = ap.parse_args()
 
 def timeline():
-    js = "global.window={};require(process.argv[1]);process.stdout.write(JSON.stringify(window.TIMELINE))"
-    return json.loads(subprocess.check_output(['node', '-e', js, os.path.join(ROOT, 'timeline.js')], cwd='/tmp'))
+    # timeline.js with the clay-only changes from clay/overrides.js applied
+    js = "global.window={};require(process.argv[1]);require(process.argv[2]);process.stdout.write(JSON.stringify(window.CLAY.apply(window.TIMELINE)))"
+    return json.loads(subprocess.check_output(['node', '-e', js, os.path.join(ROOT, 'timeline.js'), os.path.join(ROOT, 'clay', 'overrides.js')], cwd='/tmp'))
 
 TL = timeline()
 W, H = map(int, A.res.split('x'))

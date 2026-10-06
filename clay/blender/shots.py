@@ -87,7 +87,7 @@ class Checklist:
         S.parking_lot()
         S.lights()
         self.noah = Clay('noah')
-        self.board, self.checks = clipboard(self.noah.torso, (0.02, -0.21, 0.2), (math.radians(-38), 0, math.radians(-4)))
+        self.board, self.checks = clipboard(self.noah.torso, (0.0, -0.3, 0.12), (math.radians(-62), 0, math.radians(-4)))
         self.board.scale = (0.85, 0.85, 0.85)
         self.pen = cone('pen', clay('#2f5fa8', rough=0.3, bump=0.05), 0.009, 0.003, 0.12, (0, 0, -0.06), self.noah.hand['R'], (0, -0.025, 0))
         self.pen.rotation_euler = (math.radians(-60), 0, 0)
@@ -115,13 +115,13 @@ class Checklist:
         line = 1 if startled else 0
         talk = self.ctx.talk(t, line)
         hop = math.sin(seg(t, self.huh, self.huh + 0.3) * math.pi) * 0.05
-        self.board.location = (0.02, -0.21, 0.2 - 0.1 * snap)
-        self.board.rotation_euler = (math.radians(-38 + 25 * snap), 0, math.radians(-4))
+        self.board.location = (0.0, -0.3, 0.12 - 0.08 * snap)
+        self.board.rotation_euler = (math.radians(-62 + 25 * snap), 0, math.radians(-4))
         n.pose(
             bob=hop, lean=(0, 0) if startled else (-5, 0), jitter=1, seed=frame,
-            arms={'L': {'fwd': 40 - 15 * snap, 'out': -16, 'bend': 60 - 15 * snap, 'twist': 10},
-                  'R': ({'fwd': lerp(50, 25, snap), 'out': lerp(-20, 20, snap), 'bend': lerp(70, 35, snap)} if startled else
-                        {'fwd': 52 + scrib * 0.6, 'out': -22 + scrib, 'bend': 68 - row * 4})},
+            arms={'L': {'fwd': 35 - 10 * snap, 'out': -5, 'bend': 45 - 10 * snap},
+                  'R': ({'fwd': lerp(55, 25, snap), 'out': lerp(-10, 20, snap), 'bend': lerp(55, 35, snap)} if startled else
+                        {'fwd': 55 + scrib * 0.6, 'out': -10 + scrib, 'bend': 55 - row * 3})},
             head=({'tilt': -4, 'turn': 14 * snap, 'nod': -4, 'lookX': 0.8, 'lookY': -0.1, 'eyes': 'wide', 'raise': 1.4,
                    'mouth': 'o', 'open': max(talk, 0.45)} if startled else
                   {'tilt': 5, 'nod': 18, 'turn': 4, 'lookX': 0.1, 'lookY': 0.9, 'eyes': 'tired', 'raise': -0.3, 'blink': blink(t, 2) * 0.6,
@@ -177,6 +177,11 @@ def run_cycle(t, speed=3.4, power=1.4, arms=True):
     if arms:
         d['arms'] = {'L': {'fwd': -math.sin(w) * 40 * power, 'out': 12, 'bend': 70}, 'R': {'fwd': math.sin(w) * 40 * power, 'out': 12, 'bend': 70}}
     return d
+
+def hide(ob, v):
+    """Hide or show an object and everything parented to it (hide_render on an empty alone hides nothing)."""
+    ob.hide_render = v
+    for ch in ob.children_recursive: ch.hide_render = v
 
 def cues(ctx, sound, default):
     return [s['at'] for s in ctx.cfg['sfx'] if s.get('sound') == sound] or [default]
@@ -287,14 +292,14 @@ class HotTubShot:
         return {'boss': self.boss.mouthP}
 
     def render(self, t, frame):
-        b = self.boss; talk = self.ctx.talk(t, 0)
+        b = self.boss; talk = max(self.ctx.talk(t, 0), self.ctx.talk(t, 1))
         self.tub.animate(t)
         push = seg(t, 0, 6.8, lambda x: x * x * (3 - 2 * x))
         aim(self.cam, (lerp(0.3, 0.1, push), lerp(-4.6, -3.4, push), lerp(2.0, 1.8, push)), (0, 0.35, 1.5))
         pick = seg(t, self.ring + 0.5, self.ring + 0.9, ease_out)
         ringing = self.ring <= t < self.ring + 0.6
-        self.rimPhone.hide_render = pick > 0.3
-        self.handPhone.hide_render = pick <= 0.3
+        hide(self.rimPhone, pick > 0.9)
+        hide(self.handPhone, pick <= 0.9)
         self.rimPhone.rotation_euler = (math.radians(90), 0, math.radians(30 + (math.sin(t * 90) * 8 if ringing else 0)))
         relax = 1 - pick
         b.pose(legs={'L': {'fwd': 40}, 'R': {'fwd': 40}}, lean=(-6 * relax, 0), bob=math.sin(t * 1.3) * 0.01,
@@ -411,7 +416,9 @@ class JumpIn:
 class InCar:
     """Scenes 9-10: head-on through the windshield while they drive; Lu (left), Noah (middle), the Boss driving (right)."""
     def build(self, ctx):
-        S.parking_lot(); S.lights(sun_rot=(55, 0, 160))
+        S.parking_lot(); S.lights()
+        fill = bpy.data.lights.new('fill', 'AREA'); fill.energy = 160; fill.size = 3
+        self.fill = bpy.data.objects.new('fill', fill); bpy.context.scene.collection.objects.link(self.fill)
         self.ctx = ctx
         self.car = P.Car()
         self.lu = P.sit('lu', self.car.seat(-0.12, 0.5))
@@ -425,6 +432,8 @@ class InCar:
         self.car.pose(x=0, y=y, rotz=90, rock=math.sin(t * 17) * 0.4, spin=t * 2.5 / 0.37)
         self.cam.data.lens = lens
         aim(self.cam, (x, y - dist, 1.55), (x, y, look_y), dist)
+        self.fill.location = (x + 0.8, y - 3.0, 2.6)  # soft light from beside the camera into the cabin
+        self.fill.rotation_euler = (Vector((x, y, 1.4)) - self.fill.location).to_track_quat('-Z', 'Y').to_euler()
 
     def sitting(self, ob, arms, head, frame, lean=(0, 0)):
         ob.pose(legs={'L': {'fwd': 85}, 'R': {'fwd': 85}}, arms=arms, head=head, lean=lean, jitter=1, seed=frame,
@@ -460,9 +469,9 @@ class No(InCar):
                      {'tilt': -3, 'turn': -4, 'blink': 1, 'browTilt': 18, 'raise': -0.4, 'mouth': 'yell' if talk > 0.05 else 'frown', 'open': talk}, frame,
                      lean=(-4, 0))
         self.sitting(self.noah, {'L': {'fwd': 30, 'bend': 40}, 'R': {'fwd': 30, 'bend': 40}},
-                     {'turn': 25 * seg(t, 0.3, 0.6), 'lookX': 1, 'eyes': 'wide', 'raise': 1.2, 'mouth': 'o', 'open': 0.5}, frame)
+                     {'turn': -45 * seg(t, 0.2, 0.5), 'lookX': -1, 'eyes': 'wide', 'raise': 1.2, 'mouth': 'o', 'open': 0.5}, frame)
         self.sitting(self.boss, {'L': {'fwd': 70, 'out': 5, 'bend': 40}, 'R': {'fwd': 70, 'out': 5, 'bend': 40}},
-                     {'tilt': 3, 'turn': 25, 'lookX': 0.8, 'mouth': 'o', 'open': 0.5, 'raise': 1.3}, frame)
+                     {'tilt': 3, 'turn': -55 * seg(t, 0.25, 0.55), 'lookX': -1, 'mouth': 'o', 'open': 0.5, 'raise': 1.3}, frame)
 
 
 @shot('bbq')

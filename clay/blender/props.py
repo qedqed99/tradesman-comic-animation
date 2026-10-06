@@ -24,10 +24,11 @@ def phone(parent, loc=(0, 0, 0), rot=(0, 0, 0)):
 
 
 def ear_phone(person):
-    """Phone pressed to the right ear, attached to the head (arms are too short to reach on their own);
+    """Phone held up beside the right ear, attached to the head (arms are too short to reach on their own),
+    kept clear of the face so it reads on a small screen;
     pose the right arm with {'fwd': 80, 'out': 30, 'bend': 150} so the hand sits under it."""
     c = person.c; R = person.R; S_ = c['headS']
-    return phone(person.head, person.hc + Vector((-R * S_[0] * 1.02, -0.02, -R * 0.35)), (math.radians(8), 0, math.radians(55)))
+    return phone(person.head, person.hc + Vector((-R * S_[0] * 1.5, -0.08, -R * 0.2)), (math.radians(8), 0, math.radians(25)))
 
 
 # ---------------------------------------------------------------- the Boss's car
