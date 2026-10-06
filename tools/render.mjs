@@ -1,4 +1,4 @@
-// Frame-accurate MP4 render: node tools/render.mjs [out.mp4] [--scene id] [--scale 0.5] [--fps 30]
+// Frame-accurate MP4 render: node tools/render.mjs [out.mp4] [--scene id] [--scale 0.5] [--fps 30] [--page ink/index.html]
 // Steps the film one frame at a time in headless Chromium, pipes JPEG frames to ffmpeg,
 // renders the soundtrack offline with the same Web Audio code, and muxes the two.
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
@@ -9,7 +9,7 @@ import fs from 'node:fs';
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const args = process.argv.slice(2);
 const opt = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args.splice(i, 2)[1] : d; };
-const scene = opt('scene', null), scale = +opt('scale', 1), fpsArg = opt('fps', null);
+const scene = opt('scene', null), scale = +opt('scale', 1), fpsArg = opt('fps', null), pageArg = opt('page', 'index.html');
 const out = path.resolve(args[0] || path.join(root, 'renders', 'tradesman.mp4'));
 const tmp = fs.mkdtempSync('/tmp/tsrender-');
 
@@ -17,7 +17,7 @@ const browser = await chromium.launch();
 const W = Math.round(1920 * scale), H = Math.round(1080 * scale);
 const page = await browser.newPage({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: scale });
 page.on('pageerror', e => console.error('PAGE ERROR', e.message));
-await page.goto('file://' + root + '/index.html?render');
+await page.goto('file://' + root + '/' + pageArg + '?render');
 await page.evaluate(() => window.TS.ready);
 const info = await page.evaluate(() => ({ duration: TS.player.duration, fps: TIMELINE.fps, items: TS.player.items.map(i => ({ id: i.cfg.id, start: i.start, end: i.end })) }));
 const fps = +(fpsArg || info.fps);

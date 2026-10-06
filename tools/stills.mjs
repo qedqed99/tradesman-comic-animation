@@ -12,7 +12,7 @@ const browser = await chromium.launch({ executablePath: process.env.CHROME || un
 const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
 page.on('pageerror', e => console.error('PAGE ERROR', e.message));
 page.on('console', m => m.type() === 'error' && console.error('console:', m.text()));
-await page.goto('file://' + root + '/index.html?render');
+await page.goto('file://' + root + '/' + (process.env.PAGE || 'index.html') + '?render');
 await page.evaluate(() => window.TS.ready);
 const files = [];
 for (const t of times) {

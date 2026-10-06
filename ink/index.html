@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Life at Tradesman: Ballpoint</title>
+<style>
+/* Layout: a dark screening room; the film frame on top, transport and scene strip under it. Single deliberate dark look. */
+@font-face { font-family: 'Bangers'; src: url('../assets/fonts/bangers.woff2') format('woff2'); font-display: block; }
+@font-face { font-family: 'Comic Neue'; font-weight: 700; src: url('../assets/fonts/comic-neue-bold.woff2') format('woff2'); font-display: block; }
+:root {
+  color-scheme: dark;
+  --room: #16130f;        /* theatre black, warm */
+  --panel: #221d17;
+  --ink: #efe6d4;         /* paper white */
+  --muted: #a89a84;
+  --cape: #d8432a;        /* Noah's cape red */
+  --line: #3a3229;
+  --display: 'Bangers', Impact, 'Arial Narrow', sans-serif;
+  --body: 'Comic Neue', 'Trebuchet MS', system-ui, sans-serif;
+}
+html, body { height: 100%; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--room); color: var(--ink); font: 16px/1.45 var(--body); }
+.wrap { max-width: 1100px; margin: 0 auto; padding-block: 20px 28px; padding-inline: 16px; display: grid; gap: 14px; }
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+h1 { font: 400 clamp(30px, 5vw, 46px)/1 var(--display); letter-spacing: 0.04em; margin: 0; text-wrap: balance; }
+h1 span { color: var(--cape); }
+.meta { color: var(--muted); font-size: 14px; }
+.screen { position: relative; aspect-ratio: 16 / 9; max-width: 100%; background: #000; border: 3px solid #000; box-shadow: 0 0 0 1px var(--line), 0 18px 50px rgba(0,0,0,.55); overflow: hidden; }
+.screen svg { width: 100%; height: 100%; display: block; }
+.bigplay { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,.25); border: 0; cursor: pointer; color: var(--ink); font: 400 clamp(26px, 5vw, 54px)/1 var(--display); letter-spacing: .06em; }
+.bigplay b { background: var(--cape); padding: .25em .7em .2em; border: 3px solid #000; box-shadow: 5px 5px 0 #000; transform: rotate(-2deg); }
+.transport { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+button.ctl { font: 700 15px var(--body); color: var(--ink); background: var(--panel); border: 1px solid var(--line); padding: 8px 14px; border-radius: 4px; cursor: pointer; min-width: 84px; }
+button.ctl:hover { border-color: var(--muted); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--cape); outline-offset: 2px; }
+input[type=range] { flex: 1 1 240px; min-width: 0; accent-color: var(--cape); }
+.time { font: 700 15px var(--body); font-variant-numeric: tabular-nums; color: var(--muted); min-width: 110px; text-align: right; }
+.scenes { display: flex; gap: 8px; flex-wrap: wrap; }
+.scenes button { font: 700 14px var(--body); color: var(--ink); background: transparent; border: 1px dashed var(--line); padding: 6px 10px; border-radius: 4px; cursor: pointer; }
+.scenes button.on { border-style: solid; border-color: var(--cape); color: #fff; }
+.scenes small { color: var(--muted); font-weight: 400; margin-left: 6px; font-variant-numeric: tabular-nums; }
+body.render .wrap > :not(.screen) { display: none; }
+body.render .wrap { padding: 0; max-width: none; }
+body.render .bigplay { display: none; }
+body.render .screen { border: 0; box-shadow: none; width: 1920px; height: 1080px; }
+@media (prefers-reduced-motion: reduce) { .bigplay b { transform: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Life at <span>Tradesman</span></h1>
+    <div class="meta">Ballpoint test, after Keith Ross's Tiny Concert</div>
+  </header>
+  <div class="screen">
+    <svg id="film" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg"></svg>
+    <button class="bigplay" id="bigplay" aria-label="Play with sound"><b>▶ Play</b></button>
+  </div>
+  <div class="transport">
+    <button class="ctl" id="play">Play</button>
+    <input type="range" id="scrub" min="0" max="1000" value="0" aria-label="Position in film">
+    <span class="time" id="time">0.0 / 0.0 s</span>
+  </div>
+  <div class="scenes" id="scenes"></div>
+</div>
+<!-- SCRIPTS -->
+<script src="../timeline.js"></script>
+<script src="../src/engine.js"></script>
+<script src="../src/fx.js"></script>
+<script src="../src/backgrounds.js"></script>
+<script src="../src/characters.js"></script>
+<script src="../src/props.js"></script>
+<script src="../src/vehicles.js"></script>
+<script src="../src/audio.js"></script>
+<script src="../src/scenes/_sets.js"></script>
+<script src="../src/scenes/01-checklist.js"></script>
+<script src="../src/scenes/02-hey-noah.js"></script>
+<script src="../src/scenes/03-run.js"></script>
+<script src="../src/scenes/04-phone.js"></script>
+<script src="../src/scenes/05-hot-tub.js"></script>
+<script src="../src/scenes/06-chase.js"></script>
+<script src="../src/scenes/07-screech.js"></script>
+<script src="../src/scenes/08-jump-in.js"></script>
+<script src="../src/scenes/09-lunchtime.js"></script>
+<script src="../src/scenes/10-bbq.js"></script>
+<script src="ink.js"></script>
+<!-- /SCRIPTS -->
+<script>
+(function () {
+  const TS = window.TS;
+  const renderMode = /render/.test(location.search) || window.__RENDER;
+  if (renderMode) document.body.classList.add('render');
+  const svg = document.getElementById('film');
+  TS.ready = document.fonts.ready.then(() => Promise.all([document.fonts.load('40px Bangers'), document.fonts.load('700 40px "Comic Neue"')])).then(() => {
+    const player = TS.createPlayer(svg, window.TIMELINE);
+    TS.player = player;
+    player.renderAt(0);
+    if (!renderMode) setupUI(player);
+    return player;
+  });
+
+  function setupUI(player) {
+    const $ = id => document.getElementById(id);
+    const scrub = $('scrub'), time = $('time'), playBtn = $('play'), big = $('bigplay');
+    let t = 0, playing = false, ctx = null, base = 0, from = 0, raf = 0;
+    const strip = $('scenes');
+    const chips = player.items.map((it, i) => {
+      const b = document.createElement('button');
+      b.innerHTML = `${i + 1}. ${it.cfg.id.replace(/-/g, ' ')}<small>${it.cfg.duration.toFixed(1)}s</small>`;
+      b.onclick = () => seek(it.start + 0.001, playing);
+      strip.appendChild(b);
+      return b;
+    });
+    function draw() {
+      const r = player.renderAt(t);
+      scrub.value = Math.round(t / player.duration * 1000);
+      time.textContent = `${t.toFixed(1)} / ${player.duration.toFixed(1)} s`;
+      chips.forEach((c, i) => c.classList.toggle('on', player.items[i].cfg.id === r.scene));
+    }
+    function stopAudio() { if (ctx) { ctx.close(); ctx = null; } }
+    function play() {
+      if (t >= player.duration - 0.05) t = 0;
+      stopAudio();
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      TS.audio.schedule(ctx, TS.audio.master(ctx), player.audioCues(), window.TIMELINE.music, t, player.duration);
+      base = ctx.currentTime; from = t; playing = true;
+      playBtn.textContent = 'Pause'; big.hidden = true;
+      cancelAnimationFrame(raf);
+      const loop = () => {
+        if (!playing) return;
+        t = from + (ctx.currentTime - base);
+        if (t >= player.duration) { t = player.duration - 0.001; draw(); pause(); return; }
+        draw(); raf = requestAnimationFrame(loop);
+      };
+      loop();
+    }
+    function pause() { playing = false; stopAudio(); playBtn.textContent = 'Play'; cancelAnimationFrame(raf); }
+    function seek(nt, resume) { pause(); t = Math.max(0, Math.min(player.duration - 0.001, nt)); draw(); if (resume) play(); }
+    playBtn.onclick = () => (playing ? pause() : play());
+    big.onclick = play;
+    scrub.oninput = () => seek(scrub.value / 1000 * player.duration, false);
+    document.addEventListener('keydown', e => {
+      if (e.code === 'Space' && e.target.tagName !== 'INPUT') { e.preventDefault(); playing ? pause() : play(); }
+      if (e.key === 'ArrowRight') seek(t + 1 / 30, false);
+      if (e.key === 'ArrowLeft') seek(t - 1 / 30, false);
+    });
+    draw();
+  }
+})();
+</script>
+</body>
+</html>
